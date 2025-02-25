@@ -1,5 +1,6 @@
 package net.fredrikmeyer;
 
+import static java.lang.Math.sqrt;
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.GLFW_CONTEXT_VERSION_MAJOR;
 import static org.lwjgl.glfw.GLFW.GLFW_CONTEXT_VERSION_MINOR;
@@ -37,11 +38,13 @@ import static org.lwjgl.opengl.ARBVertexArrayObject.glGenVertexArrays;
 import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.GL_TRUE;
+import static org.lwjgl.opengl.GL11.GL_UNSIGNED_INT;
 import static org.lwjgl.opengl.GL11.glClear;
+import static org.lwjgl.opengl.GL11.glDrawElements;
 import static org.lwjgl.opengl.GL11C.GL_FLOAT;
 import static org.lwjgl.opengl.GL11C.GL_TRIANGLES;
 import static org.lwjgl.opengl.GL11C.glClearColor;
-import static org.lwjgl.opengl.GL11C.glDrawArrays;
+import static org.lwjgl.opengl.GL15.GL_ELEMENT_ARRAY_BUFFER;
 import static org.lwjgl.opengl.GL15.glGenBuffers;
 import static org.lwjgl.opengl.GL15C.GL_ARRAY_BUFFER;
 import static org.lwjgl.opengl.GL15C.GL_STATIC_DRAW;
@@ -80,6 +83,7 @@ public class App {
     private int vaoId;
     private int vboId;
     private int shaderProgram;
+    private int indicesId;
 
     public void run() {
         System.out.println("Hello LWJGL " + Version.getVersion() + "!");
@@ -166,10 +170,20 @@ public class App {
         glDeleteShader(fragmentShader);
 
         float[] vertices = new float[]{
-            0.0f, 0.5f, 0.0f,
-            -0.5f, -0.5f, 0.0f,
-            0.5f, -0.5f, 0.0f
+            -0.5f, (float) (-0.5f * (sqrt(3)) / 3), 0.0f, // Lower left corner
+            0.5f, (float) (-0.5f * (sqrt(3)) / 3), 0.0f, // Lower right corner
+            0.0f, (float) (0.5f * (sqrt(3)) * 2 / 3), 0.0f, // Upper corner
+            -0.5f / 2, (float) (0.5f * (sqrt(3)) / 6), 0.0f, // Inner left
+            0.5f / 2, (float) (0.5f * (sqrt(3)) / 6), 0.0f, // Inner right
+            0.0f, (float) (-0.5f * (sqrt(3)) / 3), 0.0f // Inner down
         };
+
+        int[] indices = new int[]{
+            0, 3, 5, // Lower left triangle
+            3, 2, 4, // Upper triangle
+            5, 4, 1 // Lower right triangle
+        };
+        indicesId = glGenBuffers();
 
         vaoId = glGenVertexArrays();
         glBindVertexArray(vaoId);
@@ -182,12 +196,16 @@ public class App {
         glBindBuffer(GL_ARRAY_BUFFER, vboId);
         glBufferData(GL_ARRAY_BUFFER, verticesBuffer, GL_STATIC_DRAW);
 
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indicesId);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW);
+
         glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
         glEnableVertexAttribArray(0);
 
         // Bind both the VBO and VAO to 0 so that we don't accidentally modify the VAO and VBO we created
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
         // Run the rendering loop until the user has attempted to close
         // the window or has pressed the ESCAPE key.
@@ -199,7 +217,8 @@ public class App {
 
             glUseProgram(shaderProgram);
             glBindVertexArray(vaoId);
-            glDrawArrays(GL_TRIANGLES, 0, 3);
+
+            glDrawElements(GL_TRIANGLES, indices.length, GL_UNSIGNED_INT, 0);
             glfwSwapBuffers(window);
             glfwPollEvents();
         }
@@ -209,6 +228,7 @@ public class App {
     private void clean() {
         glDeleteVertexArrays(vaoId);
         glDeleteBuffers(vboId);
+        glDeleteBuffers(indicesId);
         glDeleteProgram(shaderProgram);
 
         // Delete the VAO
