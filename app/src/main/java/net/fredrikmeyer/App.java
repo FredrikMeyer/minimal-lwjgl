@@ -80,10 +80,10 @@ import org.lwjgl.system.MemoryUtil;
 public class App {
 
     private long window;
-    private int vaoId;
-    private int vboId;
-    private int indicesId;
+    private VertexBufferObject vboId;
     private Shader shader;
+    private VertexArrayObject vao;
+    private ElementBufferObject ebo;
 
     public void run() {
         System.out.println("Hello LWJGL " + Version.getVersion() + "!");
@@ -170,29 +170,17 @@ public class App {
             3, 2, 4, // Upper triangle
             5, 4, 1 // Lower right triangle
         };
-        indicesId = glGenBuffers();
 
-        vaoId = glGenVertexArrays();
-        glBindVertexArray(vaoId);
+        vao = new VertexArrayObject();
+        vao.bind();
+        vboId = new VertexBufferObject(vertices);
+        ebo = new ElementBufferObject(indices);
 
-        FloatBuffer verticesBuffer = MemoryUtil.memAllocFloat(vertices.length);
-        verticesBuffer.put(vertices).flip();
+        vao.link(vboId, 0);
 
-        vboId = glGenBuffers();
-
-        glBindBuffer(GL_ARRAY_BUFFER, vboId);
-        glBufferData(GL_ARRAY_BUFFER, verticesBuffer, GL_STATIC_DRAW);
-
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indicesId);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW);
-
-        glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
-        glEnableVertexAttribArray(0);
-
-        // Bind both the VBO and VAO to 0 so that we don't accidentally modify the VAO and VBO we created
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindVertexArray(0);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        vao.unbind();
+        vboId.unbind();
+        ebo.unbind();
 
         // Run the rendering loop until the user has attempted to close
         // the window or has pressed the ESCAPE key.
@@ -203,7 +191,7 @@ public class App {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             shader.activate();
-            glBindVertexArray(vaoId);
+            vao.bind();
 
             glDrawElements(GL_TRIANGLES, indices.length, GL_UNSIGNED_INT, 0);
             glfwSwapBuffers(window);
@@ -213,14 +201,10 @@ public class App {
     }
 
     private void clean() {
-        glDeleteVertexArrays(vaoId);
-        glDeleteBuffers(vboId);
-        glDeleteBuffers(indicesId);
+        vao.delete();
+        vboId.delete();
+        ebo.delete();
         shader.delete();
-
-        // Delete the VAO
-        glBindVertexArray(0);
-
     }
 
     public static void main(String[] args) {
