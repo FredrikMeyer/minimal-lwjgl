@@ -1,4 +1,4 @@
-package net.fredrikmeyer;
+package net.fredrikmeyer.minimal;
 
 import static java.lang.Math.sqrt;
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
@@ -70,6 +70,7 @@ import static org.lwjgl.system.MemoryUtil.NULL;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.Objects;
+import net.fredrikmeyer.Utils;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
@@ -82,8 +83,8 @@ public class App {
     private long window;
     private int vaoId;
     private int vboId;
+    private int shaderProgram;
     private int indicesId;
-    private Shader shader;
 
     public void run() {
         System.out.println("Hello LWJGL " + Version.getVersion() + "!");
@@ -152,9 +153,22 @@ public class App {
         var caps = GL.createCapabilities();
         System.out.println(caps.forwardCompatible);
 
-        shader = new Shader(
-            Utils.loadResource("vertex.glsl"),
-            Utils.loadResource("fragment.glsl"));
+        var vertexShader = glCreateShader(GL_VERTEX_SHADER);
+        glShaderSource(vertexShader, Utils.loadResource("vertex.glsl"));
+        glCompileShader(vertexShader);
+
+        var fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+        glShaderSource(fragmentShader, Utils.loadResource("fragment.glsl"));
+        glCompileShader(fragmentShader);
+
+        shaderProgram = glCreateProgram();
+        glAttachShader(shaderProgram, vertexShader);
+        glAttachShader(shaderProgram, fragmentShader);
+        glLinkProgram(shaderProgram);
+
+        // Delete the now useless Vertex and Fragment Shader objects
+        glDeleteShader(vertexShader);
+        glDeleteShader(fragmentShader);
 
         float[] vertices = new float[]{
             -0.5f, (float) (-0.5f * (sqrt(3)) / 3), 0.0f, // Lower left corner
@@ -202,7 +216,7 @@ public class App {
             // Clean the back buffer and assign the new color to it
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            shader.activate();
+            glUseProgram(shaderProgram);
             glBindVertexArray(vaoId);
 
             glDrawElements(GL_TRIANGLES, indices.length, GL_UNSIGNED_INT, 0);
@@ -216,7 +230,7 @@ public class App {
         glDeleteVertexArrays(vaoId);
         glDeleteBuffers(vboId);
         glDeleteBuffers(indicesId);
-        shader.delete();
+        glDeleteProgram(shaderProgram);
 
         // Delete the VAO
         glBindVertexArray(0);
