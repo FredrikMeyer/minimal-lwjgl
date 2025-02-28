@@ -1,4 +1,4 @@
-package net.fredrikmeyer.minimal;
+package net.fredrikmeyer.simpletriangle;
 
 import static java.lang.Math.sqrt;
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
@@ -32,59 +32,32 @@ import static org.lwjgl.glfw.GLFW.glfwSwapInterval;
 import static org.lwjgl.glfw.GLFW.glfwTerminate;
 import static org.lwjgl.glfw.GLFW.glfwWindowHint;
 import static org.lwjgl.glfw.GLFW.glfwWindowShouldClose;
-import static org.lwjgl.opengl.ARBVertexArrayObject.glBindVertexArray;
-import static org.lwjgl.opengl.ARBVertexArrayObject.glDeleteVertexArrays;
-import static org.lwjgl.opengl.ARBVertexArrayObject.glGenVertexArrays;
 import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.GL_TRUE;
 import static org.lwjgl.opengl.GL11.GL_UNSIGNED_INT;
 import static org.lwjgl.opengl.GL11.glClear;
 import static org.lwjgl.opengl.GL11.glDrawElements;
-import static org.lwjgl.opengl.GL11C.GL_FLOAT;
 import static org.lwjgl.opengl.GL11C.GL_TRIANGLES;
 import static org.lwjgl.opengl.GL11C.glClearColor;
-import static org.lwjgl.opengl.GL15.GL_ELEMENT_ARRAY_BUFFER;
-import static org.lwjgl.opengl.GL15.glGenBuffers;
-import static org.lwjgl.opengl.GL15C.GL_ARRAY_BUFFER;
-import static org.lwjgl.opengl.GL15C.GL_STATIC_DRAW;
-import static org.lwjgl.opengl.GL15C.glBindBuffer;
-import static org.lwjgl.opengl.GL15C.glBufferData;
-import static org.lwjgl.opengl.GL15C.glDeleteBuffers;
-import static org.lwjgl.opengl.GL20.GL_FRAGMENT_SHADER;
-import static org.lwjgl.opengl.GL20.GL_VERTEX_SHADER;
-import static org.lwjgl.opengl.GL20.glAttachShader;
-import static org.lwjgl.opengl.GL20.glCompileShader;
-import static org.lwjgl.opengl.GL20.glCreateProgram;
-import static org.lwjgl.opengl.GL20.glCreateShader;
-import static org.lwjgl.opengl.GL20.glDeleteProgram;
-import static org.lwjgl.opengl.GL20.glDeleteShader;
-import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
-import static org.lwjgl.opengl.GL20.glLinkProgram;
-import static org.lwjgl.opengl.GL20.glShaderSource;
-import static org.lwjgl.opengl.GL20.glUseProgram;
-import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
-import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.Objects;
-import net.fredrikmeyer.Utils;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.system.MemoryStack;
-import org.lwjgl.system.MemoryUtil;
 
-public class App {
+public class SimpleTriangle {
 
     private long window;
-    private int vaoId;
-    private int vboId;
-    private int shaderProgram;
-    private int indicesId;
+    private VertexBufferObject vboId;
+    private Shader shader;
+    private VertexArrayObject vao;
+    private ElementBufferObject ebo;
 
     public void run() {
         System.out.println("Hello LWJGL " + Version.getVersion() + "!");
@@ -153,22 +126,9 @@ public class App {
         var caps = GL.createCapabilities();
         System.out.println(caps.forwardCompatible);
 
-        var vertexShader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertexShader, Utils.loadResource("triangle/vertex.glsl"));
-        glCompileShader(vertexShader);
-
-        var fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragmentShader, Utils.loadResource("triangle/fragment.glsl"));
-        glCompileShader(fragmentShader);
-
-        shaderProgram = glCreateProgram();
-        glAttachShader(shaderProgram, vertexShader);
-        glAttachShader(shaderProgram, fragmentShader);
-        glLinkProgram(shaderProgram);
-
-        // Delete the now useless Vertex and Fragment Shader objects
-        glDeleteShader(vertexShader);
-        glDeleteShader(fragmentShader);
+        shader = new Shader(
+            Utils.loadResource("simpletriangle/vertex.glsl"),
+            Utils.loadResource("simpletriangle/fragment.glsl"));
 
         float[] vertices = new float[]{
             -0.5f, (float) (-0.5f * (sqrt(3)) / 3), 0.0f, // Lower left corner
@@ -184,29 +144,17 @@ public class App {
             3, 2, 4, // Upper triangle
             5, 4, 1 // Lower right triangle
         };
-        indicesId = glGenBuffers();
 
-        vaoId = glGenVertexArrays();
-        glBindVertexArray(vaoId);
+        vao = new VertexArrayObject();
+        vao.bind();
+        vboId = new VertexBufferObject(vertices);
+        ebo = new ElementBufferObject(indices);
 
-        FloatBuffer verticesBuffer = MemoryUtil.memAllocFloat(vertices.length);
-        verticesBuffer.put(vertices).flip();
+        vao.link(vboId, 0);
 
-        vboId = glGenBuffers();
-
-        glBindBuffer(GL_ARRAY_BUFFER, vboId);
-        glBufferData(GL_ARRAY_BUFFER, verticesBuffer, GL_STATIC_DRAW);
-
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indicesId);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW);
-
-        glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
-        glEnableVertexAttribArray(0);
-
-        // Bind both the VBO and VAO to 0 so that we don't accidentally modify the VAO and VBO we created
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindVertexArray(0);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        vao.unbind();
+        vboId.unbind();
+        ebo.unbind();
 
         // Run the rendering loop until the user has attempted to close
         // the window or has pressed the ESCAPE key.
@@ -216,9 +164,10 @@ public class App {
             // Clean the back buffer and assign the new color to it
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            glUseProgram(shaderProgram);
-            glBindVertexArray(vaoId);
+            shader.activate();
+            vao.bind();
 
+//            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             glDrawElements(GL_TRIANGLES, indices.length, GL_UNSIGNED_INT, 0);
             glfwSwapBuffers(window);
             glfwPollEvents();
@@ -227,18 +176,14 @@ public class App {
     }
 
     private void clean() {
-        glDeleteVertexArrays(vaoId);
-        glDeleteBuffers(vboId);
-        glDeleteBuffers(indicesId);
-        glDeleteProgram(shaderProgram);
-
-        // Delete the VAO
-        glBindVertexArray(0);
-
+        vao.delete();
+        vboId.delete();
+        ebo.delete();
+        shader.delete();
     }
 
     public static void main(String[] args) {
-        new App().run();
+        new SimpleTriangle().run();
     }
 
     private void setKeyCallback() {

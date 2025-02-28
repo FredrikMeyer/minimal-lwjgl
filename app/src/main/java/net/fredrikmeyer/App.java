@@ -32,42 +32,27 @@ import static org.lwjgl.glfw.GLFW.glfwSwapInterval;
 import static org.lwjgl.glfw.GLFW.glfwTerminate;
 import static org.lwjgl.glfw.GLFW.glfwWindowHint;
 import static org.lwjgl.glfw.GLFW.glfwWindowShouldClose;
-import static org.lwjgl.opengl.ARBVertexArrayObject.glBindVertexArray;
 import static org.lwjgl.opengl.ARBVertexArrayObject.glDeleteVertexArrays;
 import static org.lwjgl.opengl.ARBVertexArrayObject.glGenVertexArrays;
 import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
+import static org.lwjgl.opengl.GL11.GL_FLOAT;
 import static org.lwjgl.opengl.GL11.GL_TRUE;
 import static org.lwjgl.opengl.GL11.GL_UNSIGNED_INT;
 import static org.lwjgl.opengl.GL11.glClear;
 import static org.lwjgl.opengl.GL11.glDrawElements;
-import static org.lwjgl.opengl.GL11C.GL_FLOAT;
 import static org.lwjgl.opengl.GL11C.GL_TRIANGLES;
 import static org.lwjgl.opengl.GL11C.glClearColor;
-import static org.lwjgl.opengl.GL15.GL_ELEMENT_ARRAY_BUFFER;
 import static org.lwjgl.opengl.GL15.glGenBuffers;
-import static org.lwjgl.opengl.GL15C.GL_ARRAY_BUFFER;
-import static org.lwjgl.opengl.GL15C.GL_STATIC_DRAW;
-import static org.lwjgl.opengl.GL15C.glBindBuffer;
 import static org.lwjgl.opengl.GL15C.glBufferData;
 import static org.lwjgl.opengl.GL15C.glDeleteBuffers;
-import static org.lwjgl.opengl.GL20.GL_FRAGMENT_SHADER;
-import static org.lwjgl.opengl.GL20.GL_VERTEX_SHADER;
-import static org.lwjgl.opengl.GL20.glAttachShader;
-import static org.lwjgl.opengl.GL20.glCompileShader;
-import static org.lwjgl.opengl.GL20.glCreateProgram;
-import static org.lwjgl.opengl.GL20.glCreateShader;
-import static org.lwjgl.opengl.GL20.glDeleteProgram;
-import static org.lwjgl.opengl.GL20.glDeleteShader;
-import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
-import static org.lwjgl.opengl.GL20.glLinkProgram;
+import static org.lwjgl.opengl.GL20.glGetUniformLocation;
 import static org.lwjgl.opengl.GL20.glShaderSource;
-import static org.lwjgl.opengl.GL20.glUseProgram;
+import static org.lwjgl.opengl.GL20.glUniform1f;
 import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
-import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.Objects;
 import org.lwjgl.Version;
@@ -75,12 +60,11 @@ import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.system.MemoryStack;
-import org.lwjgl.system.MemoryUtil;
 
 public class App {
 
     private long window;
-    private VertexBufferObject vboId;
+    private VertexBufferObject vbo;
     private Shader shader;
     private VertexArrayObject vao;
     private ElementBufferObject ebo;
@@ -153,8 +137,8 @@ public class App {
         System.out.println(caps.forwardCompatible);
 
         shader = new Shader(
-            Utils.loadResource("vertex.glsl"),
-            Utils.loadResource("fragment.glsl"));
+            Utils.loadResource("triangle/vertex.glsl"),
+            Utils.loadResource("triangle/fragment.glsl"));
 
         float[] vertices = new float[]{
             -0.5f, (float) (-0.5f * (sqrt(3)) / 3), 0.0f, // Lower left corner
@@ -173,26 +157,34 @@ public class App {
 
         vao = new VertexArrayObject();
         vao.bind();
-        vboId = new VertexBufferObject(vertices);
+        vbo = new VertexBufferObject(vertices);
         ebo = new ElementBufferObject(indices);
 
-        vao.link(vboId, 0);
+        vao.link(vbo, 0);
+        vao.linkAttributes(vbo, 0 ,3, GL_FLOAT, 0, 0);
+        vao.linkAttributes(vbo, 1 ,3, GL_FLOAT, 3 * 4, 0);
 
         vao.unbind();
-        vboId.unbind();
+        vbo.unbind();
         ebo.unbind();
+
+        var uniId = glGetUniformLocation(shader.shaderProgram(), "scale");
 
         // Run the rendering loop until the user has attempted to close
         // the window or has pressed the ESCAPE key.
+        var scale = 0.0f;
         while (!glfwWindowShouldClose(window)) {
+            scale += 0.01f;
             // Clear the screen
             glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
             // Clean the back buffer and assign the new color to it
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             shader.activate();
+            glUniform1f(uniId, (float) (Math.sin(scale) + 1));
             vao.bind();
 
+//            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             glDrawElements(GL_TRIANGLES, indices.length, GL_UNSIGNED_INT, 0);
             glfwSwapBuffers(window);
             glfwPollEvents();
@@ -202,7 +194,7 @@ public class App {
 
     private void clean() {
         vao.delete();
-        vboId.delete();
+        vbo.delete();
         ebo.delete();
         shader.delete();
     }
