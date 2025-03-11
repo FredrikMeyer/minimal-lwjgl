@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("DuplicatedCode")
 public class Utils {
 
     public static String loadResource(String resource) {

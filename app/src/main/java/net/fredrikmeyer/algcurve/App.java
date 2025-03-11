@@ -1,9 +1,5 @@
-package net.fredrikmeyer.movingtriangle;
+package net.fredrikmeyer.algcurve;
 
-import static java.lang.Math.sqrt;
-import java.nio.IntBuffer;
-import java.util.Objects;
-import org.lwjgl.Version;
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.GLFW_CONTEXT_VERSION_MAJOR;
 import static org.lwjgl.glfw.GLFW.GLFW_CONTEXT_VERSION_MINOR;
@@ -20,6 +16,7 @@ import static org.lwjgl.glfw.GLFW.glfwCreateWindow;
 import static org.lwjgl.glfw.GLFW.glfwDefaultWindowHints;
 import static org.lwjgl.glfw.GLFW.glfwDestroyWindow;
 import static org.lwjgl.glfw.GLFW.glfwGetPrimaryMonitor;
+import static org.lwjgl.glfw.GLFW.glfwGetTime;
 import static org.lwjgl.glfw.GLFW.glfwGetVideoMode;
 import static org.lwjgl.glfw.GLFW.glfwGetWindowSize;
 import static org.lwjgl.glfw.GLFW.glfwInit;
@@ -35,9 +32,6 @@ import static org.lwjgl.glfw.GLFW.glfwSwapInterval;
 import static org.lwjgl.glfw.GLFW.glfwTerminate;
 import static org.lwjgl.glfw.GLFW.glfwWindowHint;
 import static org.lwjgl.glfw.GLFW.glfwWindowShouldClose;
-import org.lwjgl.glfw.GLFWErrorCallback;
-import org.lwjgl.glfw.GLFWVidMode;
-import org.lwjgl.opengl.GL;
 import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.GL_FLOAT;
@@ -49,9 +43,23 @@ import static org.lwjgl.opengl.GL11C.GL_TRIANGLES;
 import static org.lwjgl.opengl.GL11C.glClearColor;
 import static org.lwjgl.opengl.GL20.glGetUniformLocation;
 import static org.lwjgl.opengl.GL20.glUniform1f;
-import org.lwjgl.system.MemoryStack;
+import static org.lwjgl.opengl.GL20.glUniform2f;
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.system.MemoryUtil.NULL;
+
+import java.nio.IntBuffer;
+import java.util.Objects;
+import net.fredrikmeyer.ElementBufferObject;
+import net.fredrikmeyer.Shader;
+import net.fredrikmeyer.Texture;
+import net.fredrikmeyer.Utils;
+import net.fredrikmeyer.VertexArrayObject;
+import net.fredrikmeyer.VertexBufferObject;
+import org.lwjgl.Version;
+import org.lwjgl.glfw.GLFWErrorCallback;
+import org.lwjgl.glfw.GLFWVidMode;
+import org.lwjgl.opengl.GL;
+import org.lwjgl.system.MemoryStack;
 
 public class App {
 
@@ -126,57 +134,59 @@ public class App {
         // creates the GLCapabilities instance and makes the OpenGL
         // bindings available for use.
         var caps = GL.createCapabilities();
-        System.out.println(caps.forwardCompatible);
+        System.out.println("Forward compat: " + caps.forwardCompatible);
 
         shader = new Shader(
-            Utils.loadResource("movingtriangle/vertex.glsl"),
-            Utils.loadResource("movingtriangle/fragment.glsl"));
+            Utils.loadResource("algcurve/vertex.glsl"),
+            Utils.loadResource("algcurve/fragment.glsl"));
 
-        float[] vertices = new float[]{
-            -0.5f, (float) (-0.5f * (sqrt(3)) / 3), 0.0f, // Lower left corner
-            0.5f, (float) (-0.5f * (sqrt(3)) / 3), 0.0f, // Lower right corner
-            0.0f, (float) (0.5f * (sqrt(3)) * 2 / 3), 0.0f, // Upper corner
-            -0.5f / 2, (float) (0.5f * (sqrt(3)) / 6), 0.0f, // Inner left
-            0.5f / 2, (float) (0.5f * (sqrt(3)) / 6), 0.0f, // Inner right
-            0.0f, (float) (-0.5f * (sqrt(3)) / 3), 0.0f // Inner down
+        float[] quadVertices = {
+            -1.0f, -1.0f, // Bottom-left
+            1.0f, -1.0f, // Bottom-right
+            -1.0f, 1.0f, // Top-left
+            1.0f, 1.0f, // Top-right
         };
 
-        int[] indices = new int[]{
-            0, 3, 5, // Lower left triangle
-            3, 2, 4, // Upper triangle
-            5, 4, 1 // Lower right triangle
+        int[] quadIndices = {
+            0, 1, 2, // First triangle
+            1, 3, 2  // Second triangle
         };
 
         vao = new VertexArrayObject();
         vao.bind();
-        vbo = new VertexBufferObject(vertices);
-        ebo = new ElementBufferObject(indices);
+        vbo = new VertexBufferObject(quadVertices);
+        ebo = new ElementBufferObject(quadIndices);
 
-        vao.link(vbo, 0);
-        vao.linkAttributes(vbo, 0, 3, GL_FLOAT, 3 * 4, 0);
+        vao.linkAttributes(vbo, 0, 2, GL_FLOAT, 2 * 4, 0);
 
         vao.unbind();
         vbo.unbind();
         ebo.unbind();
 
-        var uniId = glGetUniformLocation(shader.shaderProgram(), "scale");
+        var uParam = glGetUniformLocation(shader.shaderProgram(), "uParam");
+        var uRangeId = glGetUniformLocation(shader.shaderProgram(), "uRange");
+        var uThresholdId = glGetUniformLocation(shader.shaderProgram(), "uThreshold");
 
         // Run the rendering loop until the user has attempted to close
         // the window or has pressed the ESCAPE key.
-        var scale = 0.0f;
+        var t = 0.0;
         while (!glfwWindowShouldClose(window)) {
-            scale += 0.01f;
             // Clear the screen
             glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
             // Clean the back buffer and assign the new color to it
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             shader.activate();
-            glUniform1f(uniId, (float) (Math.sin(scale) + 1));
+
+            glUniform1f(uParam, (float) Math.sin(glfwGetTime() / 5));
+            // Define world range for x and y (e.g., -2 to 2)
+            glUniform2f(uRangeId, -2.0f, 2.0f);
+            // Define the threshold for floating-point precision
+            glUniform1f(uThresholdId, 0.01f);
+
             vao.bind();
 
-//            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            glDrawElements(GL_TRIANGLES, indices.length, GL_UNSIGNED_INT, 0);
+            glDrawElements(GL_TRIANGLES, quadIndices.length, GL_UNSIGNED_INT, 0);
             glfwSwapBuffers(window);
             glfwPollEvents();
         }

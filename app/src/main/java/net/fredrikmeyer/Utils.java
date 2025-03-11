@@ -41,6 +41,7 @@ public class Utils {
                 }
             }
             bb.flip();
+
             return memSlice(bb);
         } catch (IOException e) {
             throw new RuntimeException("Failed to load resource: " + resource, e);
