@@ -1,9 +1,8 @@
-package net.fredrikmeyer.simpletriangle;
+package net.fredrikmeyer.movingtriangle;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.ByteBuffer;
 import java.util.stream.Collectors;
 
 public class Utils {

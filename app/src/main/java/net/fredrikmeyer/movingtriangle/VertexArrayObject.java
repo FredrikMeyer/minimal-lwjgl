@@ -1,9 +1,8 @@
-package net.fredrikmeyer;
+package net.fredrikmeyer.movingtriangle;
 
 import static org.lwjgl.opengl.ARBVertexArrayObject.glBindVertexArray;
 import static org.lwjgl.opengl.ARBVertexArrayObject.glDeleteVertexArrays;
 import static org.lwjgl.opengl.ARBVertexArrayObject.glGenVertexArrays;
-import static org.lwjgl.opengl.GL11.GL_FALSE;
 import static org.lwjgl.opengl.GL11C.GL_FLOAT;
 import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
 import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
@@ -50,7 +49,6 @@ public class VertexArrayObject {
         vbo.bind();
         glVertexAttribPointer(layout, numComponents, type, false, stride, offset);
         glEnableVertexAttribArray(layout);
-        vbo.unbind();
     }
 
     public void bind() {

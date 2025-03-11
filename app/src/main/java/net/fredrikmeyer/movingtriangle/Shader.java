@@ -1,7 +1,7 @@
-package net.fredrikmeyer;
+package net.fredrikmeyer.movingtriangle;
 
+import org.lwjgl.opengl.GL20;
 import static org.lwjgl.opengl.GL20.GL_FRAGMENT_SHADER;
-import static org.lwjgl.opengl.GL20.GL_LINK_STATUS;
 import static org.lwjgl.opengl.GL20.GL_VERTEX_SHADER;
 import static org.lwjgl.opengl.GL20.glAttachShader;
 import static org.lwjgl.opengl.GL20.glCompileShader;
@@ -9,12 +9,9 @@ import static org.lwjgl.opengl.GL20.glCreateProgram;
 import static org.lwjgl.opengl.GL20.glCreateShader;
 import static org.lwjgl.opengl.GL20.glDeleteProgram;
 import static org.lwjgl.opengl.GL20.glDeleteShader;
-import static org.lwjgl.opengl.GL20.glGetProgrami;
 import static org.lwjgl.opengl.GL20.glLinkProgram;
 import static org.lwjgl.opengl.GL20.glShaderSource;
 import static org.lwjgl.opengl.GL20.glUseProgram;
-
-import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
 public class Shader {
@@ -45,12 +42,6 @@ public class Shader {
         if (resultVert == GL20.GL_FALSE) {
             String logVert = GL30.glGetShaderInfoLog(vertexShaderId);
             throw new RuntimeException("Failed to compile vertex shader: " + logVert);
-        }
-
-        var linkStatus = glGetProgrami(shaderProgram, GL_LINK_STATUS);
-        if (linkStatus == GL20.GL_FALSE) {
-            String log = GL30.glGetProgramInfoLog(shaderProgram);
-            throw new RuntimeException("Failed to link program: " + log);
         }
 
         // Delete the now useless Vertex and Fragment Shader objects

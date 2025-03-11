@@ -1,5 +1,9 @@
 package net.fredrikmeyer;
 
+import java.nio.IntBuffer;
+import java.util.Objects;
+import org.lwjgl.Version;
+
 import static java.lang.Math.sqrt;
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.GLFW_CONTEXT_VERSION_MAJOR;
@@ -32,8 +36,9 @@ import static org.lwjgl.glfw.GLFW.glfwSwapInterval;
 import static org.lwjgl.glfw.GLFW.glfwTerminate;
 import static org.lwjgl.glfw.GLFW.glfwWindowHint;
 import static org.lwjgl.glfw.GLFW.glfwWindowShouldClose;
-import static org.lwjgl.opengl.ARBVertexArrayObject.glDeleteVertexArrays;
-import static org.lwjgl.opengl.ARBVertexArrayObject.glGenVertexArrays;
+import org.lwjgl.glfw.GLFWErrorCallback;
+import org.lwjgl.glfw.GLFWVidMode;
+import org.lwjgl.opengl.GL;
 import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.GL_FLOAT;
@@ -43,23 +48,11 @@ import static org.lwjgl.opengl.GL11.glClear;
 import static org.lwjgl.opengl.GL11.glDrawElements;
 import static org.lwjgl.opengl.GL11C.GL_TRIANGLES;
 import static org.lwjgl.opengl.GL11C.glClearColor;
-import static org.lwjgl.opengl.GL15.glGenBuffers;
-import static org.lwjgl.opengl.GL15C.glBufferData;
-import static org.lwjgl.opengl.GL15C.glDeleteBuffers;
 import static org.lwjgl.opengl.GL20.glGetUniformLocation;
-import static org.lwjgl.opengl.GL20.glShaderSource;
 import static org.lwjgl.opengl.GL20.glUniform1f;
-import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
+import org.lwjgl.system.MemoryStack;
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.system.MemoryUtil.NULL;
-
-import java.nio.IntBuffer;
-import java.util.Objects;
-import org.lwjgl.Version;
-import org.lwjgl.glfw.GLFWErrorCallback;
-import org.lwjgl.glfw.GLFWVidMode;
-import org.lwjgl.opengl.GL;
-import org.lwjgl.system.MemoryStack;
 
 public class App {
 
@@ -134,47 +127,55 @@ public class App {
         // creates the GLCapabilities instance and makes the OpenGL
         // bindings available for use.
         var caps = GL.createCapabilities();
-        System.out.println(caps.forwardCompatible);
+        System.out.println("Forward compat: " + caps.forwardCompatible);
 
         shader = new Shader(
             Utils.loadResource("triangle/vertex.glsl"),
             Utils.loadResource("triangle/fragment.glsl"));
 
-        float[] vertices = new float[]{
-            -0.5f, (float) (-0.5f * (sqrt(3)) / 3), 0.0f, // Lower left corner
-            0.5f, (float) (-0.5f * (sqrt(3)) / 3), 0.0f, // Lower right corner
-            0.0f, (float) (0.5f * (sqrt(3)) * 2 / 3), 0.0f, // Upper corner
-            -0.5f / 2, (float) (0.5f * (sqrt(3)) / 6), 0.0f, // Inner left
-            0.5f / 2, (float) (0.5f * (sqrt(3)) / 6), 0.0f, // Inner right
-            0.0f, (float) (-0.5f * (sqrt(3)) / 3), 0.0f // Inner down
-        };
+        float[] vertices = new float[]
+            { //     COORDINATES     /        COLORS      /   TexCoord  //
+                -0.5f, -0.5f, 0.0f,     1.0f, 0.0f, 0.0f,	0.0f, 0.0f, // Lower left corner
+                -0.5f,  0.5f, 0.0f,     0.0f, 1.0f, 0.0f,	0.0f, 1.0f, // Upper left corner
+                0.5f,  0.5f, 0.0f,     0.0f, 0.0f, 1.0f,	1.0f, 1.0f, // Upper right corner
+                0.5f, -0.5f, 0.0f,     1.0f, 1.0f, 1.0f,	1.0f, 0.0f  // Lower right corner
+            };
 
         int[] indices = new int[]{
-            0, 3, 5, // Lower left triangle
-            3, 2, 4, // Upper triangle
-            5, 4, 1 // Lower right triangle
+            0, 2, 1, // Upper triangle
+            0, 3, 2 // Lower triangle
         };
 
         vao = new VertexArrayObject();
         vao.bind();
         vbo = new VertexBufferObject(vertices);
         ebo = new ElementBufferObject(indices);
+        System.out.println("go herexxx");
 
-        vao.link(vbo, 0);
-        vao.linkAttributes(vbo, 0 ,3, GL_FLOAT, 0, 0);
-        vao.linkAttributes(vbo, 1 ,3, GL_FLOAT, 3 * 4, 0);
-
+        System.out.println("go herexxxx");
+        vao.linkAttributes(vbo, 0, 3, GL_FLOAT, 8 * 4, 0);
+        System.out.println("go herexxxxxxx");
+        vao.linkAttributes(vbo, 1, 3, GL_FLOAT, 8 * 4, 3 * 4);
+        System.out.println("xzxasa");
+        vao.linkAttributes(vbo, 2, 2, GL_FLOAT, 8 * 4, 6 * 4);
+        System.out.println("go sdasd");
         vao.unbind();
         vbo.unbind();
         ebo.unbind();
 
+        System.out.println("go here");
+
         var uniId = glGetUniformLocation(shader.shaderProgram(), "scale");
+
+        // Texture path
+//        var byteBuffer = Utils.loadResourceByteBuffer("icon.png");
+
+//        var texture = new Texture(byteBuffer);
 
         // Run the rendering loop until the user has attempted to close
         // the window or has pressed the ESCAPE key.
-        var scale = 0.0f;
+        var scale = 0.5f;
         while (!glfwWindowShouldClose(window)) {
-            scale += 0.01f;
             // Clear the screen
             glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
             // Clean the back buffer and assign the new color to it
@@ -184,7 +185,6 @@ public class App {
             glUniform1f(uniId, (float) (Math.sin(scale) + 1));
             vao.bind();
 
-//            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             glDrawElements(GL_TRIANGLES, indices.length, GL_UNSIGNED_INT, 0);
             glfwSwapBuffers(window);
             glfwPollEvents();
