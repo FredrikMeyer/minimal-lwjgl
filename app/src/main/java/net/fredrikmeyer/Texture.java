@@ -21,6 +21,8 @@ import static org.lwjgl.stb.STBImage.stbi_image_free;
 import static org.lwjgl.stb.STBImage.stbi_info_from_memory;
 import static org.lwjgl.stb.STBImage.stbi_load;
 import static org.lwjgl.stb.STBImage.stbi_load_from_memory;
+import static org.lwjgl.stb.STBImage.stbi_set_flip_vertically_on_load;
+
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
@@ -40,8 +42,7 @@ public class Texture {
             IntBuffer h = stack.mallocInt(1);
             IntBuffer channels = stack.mallocInt(1);
 
-            stbi_load_from_memory(textureBuffer, w, h, channels, 4);
-
+            stbi_set_flip_vertically_on_load(true);
             ByteBuffer buf = stbi_load_from_memory(textureBuffer, w, h, channels, 4);
             if (buf == null) {
                 throw new RuntimeException(
@@ -54,6 +55,7 @@ public class Texture {
             generateTexture(width, height, buf);
 
             stbi_image_free(buf);
+            glBindTexture(GL_TEXTURE_2D, 0);
         }
     }
 

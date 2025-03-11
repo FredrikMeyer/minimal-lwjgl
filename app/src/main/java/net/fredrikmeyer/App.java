@@ -150,15 +150,11 @@ public class App {
         vao.bind();
         vbo = new VertexBufferObject(vertices);
         ebo = new ElementBufferObject(indices);
-        System.out.println("go herexxx");
 
-        System.out.println("go herexxxx");
         vao.linkAttributes(vbo, 0, 3, GL_FLOAT, 8 * 4, 0);
-        System.out.println("go herexxxxxxx");
         vao.linkAttributes(vbo, 1, 3, GL_FLOAT, 8 * 4, 3 * 4);
-        System.out.println("xzxasa");
         vao.linkAttributes(vbo, 2, 2, GL_FLOAT, 8 * 4, 6 * 4);
-        System.out.println("go sdasd");
+
         vao.unbind();
         vbo.unbind();
         ebo.unbind();
@@ -168,9 +164,9 @@ public class App {
         var uniId = glGetUniformLocation(shader.shaderProgram(), "scale");
 
         // Texture path
-//        var byteBuffer = Utils.loadResourceByteBuffer("icon.png");
+        var byteBuffer = Utils.loadResourceByteBuffer("icon.png");
 
-//        var texture = new Texture(byteBuffer);
+        var texture = new Texture(byteBuffer);
 
         // Run the rendering loop until the user has attempted to close
         // the window or has pressed the ESCAPE key.
@@ -183,6 +179,7 @@ public class App {
 
             shader.activate();
             glUniform1f(uniId, (float) (Math.sin(scale) + 1));
+            texture.bind();
             vao.bind();
 
             glDrawElements(GL_TRIANGLES, indices.length, GL_UNSIGNED_INT, 0);
