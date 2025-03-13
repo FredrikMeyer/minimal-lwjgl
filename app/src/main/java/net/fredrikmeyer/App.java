@@ -19,7 +19,6 @@ import static org.lwjgl.glfw.GLFW.glfwDestroyWindow;
 import static org.lwjgl.glfw.GLFW.glfwGetPrimaryMonitor;
 import static org.lwjgl.glfw.GLFW.glfwGetVideoMode;
 import static org.lwjgl.glfw.GLFW.glfwGetWindowSize;
-import static org.lwjgl.glfw.GLFW.glfwGetFramebufferSize;
 import static org.lwjgl.glfw.GLFW.glfwInit;
 import static org.lwjgl.glfw.GLFW.glfwMakeContextCurrent;
 import static org.lwjgl.glfw.GLFW.glfwPollEvents;
@@ -36,28 +35,19 @@ import static org.lwjgl.glfw.GLFW.glfwWindowShouldClose;
 import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.GL_FLOAT;
-import static org.lwjgl.opengl.GL11.GL_RGBA;
 import static org.lwjgl.opengl.GL11.GL_TRUE;
-import static org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE;
 import static org.lwjgl.opengl.GL11.GL_UNSIGNED_INT;
 import static org.lwjgl.opengl.GL11.glClear;
 import static org.lwjgl.opengl.GL11.glDrawElements;
-import static org.lwjgl.opengl.GL11.glReadPixels;
 import static org.lwjgl.opengl.GL11C.GL_TRIANGLES;
 import static org.lwjgl.opengl.GL11C.glClearColor;
 import static org.lwjgl.opengl.GL20.glGetUniformLocation;
 import static org.lwjgl.opengl.GL20.glUniform1f;
-import static org.lwjgl.stb.STBImageWrite.stbi_write_png;
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
-import java.io.File;
-import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Objects;
-import org.lwjgl.BufferUtils;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
@@ -71,6 +61,7 @@ public class App {
     private Shader shader;
     private VertexArrayObject vao;
     private ElementBufferObject ebo;
+    private ScreenshotManager screenshotManager;
 
     public void run() {
         System.out.println("Hello LWJGL " + Version.getVersion() + "!");
@@ -128,6 +119,9 @@ public class App {
 
         // Make the window visible
         glfwShowWindow(window);
+
+        // Initialize screenshot manager
+        screenshotManager = new ScreenshotManager();
     }
 
     private void loop() {
@@ -215,75 +209,11 @@ public class App {
             if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
                 glfwSetWindowShouldClose(window, true); // We will detect this in the rendering loop
             } else if (key == GLFW_KEY_F2 && action == GLFW_RELEASE) {
-                takeScreenshot();
+                screenshotManager.takeScreenshot(window);
             }
         });
     }
 
-    /**
-     * Takes a screenshot of the current window and saves it as a PNG file.
-     * The file is saved in the current directory with a timestamp in the filename.
-     */
-    private void takeScreenshot() {
-        try (MemoryStack stack = stackPush()) {
-            IntBuffer widthBuffer = stack.mallocInt(1);
-            IntBuffer heightBuffer = stack.mallocInt(1);
-
-            // Get framebuffer size (actual size of the window content)
-            glfwGetFramebufferSize(window, widthBuffer, heightBuffer);
-            int width = widthBuffer.get(0);
-            int height = heightBuffer.get(0);
-
-            // Create buffer to store pixel data
-            ByteBuffer buffer = BufferUtils.createByteBuffer(width * height * 4); // 4 bytes per pixel (RGBA)
-
-            // Read pixels from framebuffer
-            glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
-
-            // Create a new buffer for the flipped image
-            ByteBuffer flippedBuffer = BufferUtils.createByteBuffer(width * height * 4);
-
-            // Flip the image vertically (OpenGL reads from bottom-left, but images typically start from top-left)
-            for (int y = 0; y < height; y++) {
-                int srcRow = height - 1 - y;
-                for (int x = 0; x < width; x++) {
-                    int srcIndex = (srcRow * width + x) * 4;
-                    int dstIndex = (y * width + x) * 4;
-
-                    // Set position and copy RGBA values
-                    buffer.position(srcIndex);
-                    flippedBuffer.position(dstIndex);
-
-                    flippedBuffer.put(buffer.get());  // R
-                    flippedBuffer.put(buffer.get());  // G
-                    flippedBuffer.put(buffer.get());  // B
-                    flippedBuffer.put(buffer.get());  // A
-                }
-            }
-
-            // Reset position to the beginning of buffer
-            flippedBuffer.position(0);
-
-            // Create a directory if it doesn't exist
-            File screenshotsDir = new File("screenshots");
-            if (!screenshotsDir.exists()) {
-                screenshotsDir.mkdir();
-            }
-
-            // Generate filename with timestamp
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
-            String timestamp = dateFormat.format(new Date());
-            String filename = "screenshots/screenshot_" + timestamp + ".png";
-
-            // Save the flipped image
-            stbi_write_png(filename, width, height, 4, flippedBuffer, width * 4);
-
-            System.out.println("Screenshot saved to: " + filename);
-        } catch (Exception e) {
-            System.err.println("Failed to take screenshot: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
 
     private void centerWindow() {
         try (MemoryStack stack = stackPush()) {
