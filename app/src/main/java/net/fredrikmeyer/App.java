@@ -34,20 +34,32 @@ import static org.lwjgl.glfw.GLFW.glfwWindowHint;
 import static org.lwjgl.glfw.GLFW.glfwWindowShouldClose;
 import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
+import static org.lwjgl.opengl.GL11.GL_DEPTH_TEST;
+import static org.lwjgl.opengl.GL11.GL_FALSE;
 import static org.lwjgl.opengl.GL11.GL_FLOAT;
+import static org.lwjgl.opengl.GL11.GL_LINE;
 import static org.lwjgl.opengl.GL11.GL_TRUE;
 import static org.lwjgl.opengl.GL11.GL_UNSIGNED_INT;
 import static org.lwjgl.opengl.GL11.glClear;
 import static org.lwjgl.opengl.GL11.glDrawElements;
+import static org.lwjgl.opengl.GL11.glEnable;
+import static org.lwjgl.opengl.GL11C.GL_FRONT_AND_BACK;
 import static org.lwjgl.opengl.GL11C.GL_TRIANGLES;
 import static org.lwjgl.opengl.GL11C.glClearColor;
+import static org.lwjgl.opengl.GL11C.glPolygonMode;
 import static org.lwjgl.opengl.GL20.glGetUniformLocation;
 import static org.lwjgl.opengl.GL20.glUniform1f;
+import static org.lwjgl.opengl.GL20.glUniformMatrix4fv;
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
+import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.Objects;
+import org.joml.Matrix4d;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
+import org.lwjgl.BufferUtils;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
@@ -139,15 +151,20 @@ public class App {
 
         float[] vertices = new float[]
             { //     COORDINATES     /        COLORS      /   TexCoord  //
-                -0.5f, -0.5f, 0.0f,     1.0f, 0.0f, 0.0f,	0.0f, 0.0f, // Lower left corner
-                -0.5f,  0.5f, 0.0f,     0.0f, 1.0f, 0.0f,	0.0f, 1.0f, // Upper left corner
-                0.5f,  0.5f, 0.0f,     0.0f, 0.0f, 1.0f,	1.0f, 1.0f, // Upper right corner
-                0.5f, -0.5f, 0.0f,     1.0f, 1.0f, 1.0f,	1.0f, 0.0f  // Lower right corner
+                -0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	0.0f, 0.0f,
+                -0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	5.0f, 0.0f,
+                0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	0.0f, 0.0f,
+                0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	5.0f, 0.0f,
+                0.0f, 0.8f,  0.0f,     0.92f, 0.86f, 0.76f,	2.5f, 5.0f
             };
 
         int[] indices = new int[]{
-            0, 2, 1, // Upper triangle
-            0, 3, 2 // Lower triangle
+            0, 1, 2,
+            0, 2, 3,
+            0, 1, 4,
+            1, 2, 4,
+            2, 3, 4,
+            3, 0, 4
         };
 
         vao = new VertexArrayObject();
@@ -170,9 +187,14 @@ public class App {
 
         var texture = new Texture(byteBuffer);
 
+        // Enables the Depth Buffer
+        glEnable(GL_DEPTH_TEST);
+
+
         // Run the rendering loop until the user has attempted to close
         // the window or has pressed the ESCAPE key.
         var scale = 0.5f;
+        var rotation = 0.0f;
         while (!glfwWindowShouldClose(window)) {
             // Clear the screen
             glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
@@ -180,6 +202,26 @@ public class App {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             shader.activate();
+
+            FloatBuffer fbModel = BufferUtils.createFloatBuffer(16);
+            Matrix4f modelMatrix = new Matrix4f().rotate(rotation, 0, 1, 0);
+            modelMatrix.get(fbModel);
+            FloatBuffer fbProjection = BufferUtils.createFloatBuffer(16);
+            Matrix4f projectionMatrix = new Matrix4f().perspective(45, 300.0f / 300.0f, 0.1f, 100.0f);
+            projectionMatrix.get(fbProjection);
+            FloatBuffer fbView = BufferUtils.createFloatBuffer(16);
+            Matrix4f viewMatrix = new Matrix4f().translate(new Vector3f(0.0f, -0.5f, -2.0f));
+            viewMatrix.get(fbView);
+
+            rotation += 0.01f;
+
+            var modelLoc = glGetUniformLocation(shader.shaderProgram(), "model");
+            glUniformMatrix4fv(modelLoc, false, fbModel);
+            var viewLoc = glGetUniformLocation(shader.shaderProgram(), "view");
+            glUniformMatrix4fv(viewLoc, false, fbView);
+            var projLoc = glGetUniformLocation(shader.shaderProgram(), "proj");
+            glUniformMatrix4fv(projLoc, false, fbProjection);
+
             glUniform1f(uniId, (float) (Math.sin(scale) + 1));
             texture.bind();
             vao.bind();
