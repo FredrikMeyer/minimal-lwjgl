@@ -178,7 +178,10 @@ public class App {
 
             shader.activate();
 
-            glUniform1f(uParam, (float) Math.sin(glfwGetTime() / 5));
+//            glUniform1f(uParam, (float) Math.pow(Math.sin(glfwGetTime() / 2), 3));
+            glUniform1f(uParam,
+                (float) (Math.sin(glfwGetTime() / 2) * Math.abs(Math.sin(glfwGetTime() / 2))));
+
             // Define world range for x and y (e.g., -2 to 2)
             glUniform2f(uRangeId, -2.0f, 2.0f);
             // Define the threshold for floating-point precision

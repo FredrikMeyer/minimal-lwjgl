@@ -261,10 +261,10 @@ public class App {
                 }
             }
 
-            // Reset position to beginning of buffer
+            // Reset position to the beginning of buffer
             flippedBuffer.position(0);
 
-            // Create directory if it doesn't exist
+            // Create a directory if it doesn't exist
             File screenshotsDir = new File("screenshots");
             if (!screenshotsDir.exists()) {
                 screenshotsDir.mkdir();
