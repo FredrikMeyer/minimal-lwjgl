@@ -11,6 +11,15 @@ public class Camera {
     private final Vector3f position;
     private final float aspectRatio;
 
+    /**
+     * Gets the current position of the camera.
+     *
+     * @return a copy of the camera's position vector
+     */
+    public Vector3f getPosition() {
+        return new Vector3f(position);
+    }
+
     public Camera(float aspectRatio, Vector3f position) {
         this.aspectRatio = aspectRatio;
         this.position = position;

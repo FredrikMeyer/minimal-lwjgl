@@ -7,9 +7,14 @@ import org.junit.jupiter.api.BeforeEach;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_A;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_D;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_F2;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_S;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_W;
 import static org.lwjgl.glfw.GLFW.GLFW_RELEASE;
+import static org.lwjgl.glfw.GLFW.GLFW_REPEAT;
 
 class InputHandlerTest {
 
@@ -79,13 +84,17 @@ class InputHandlerTest {
 
     private MockWindow window;
     private MockScreenshotManager screenshotManager;
+    private Camera camera;
     private InputHandler inputHandler;
+    private static final float DELTA = 0.0001f;
 
     @BeforeEach
     void setUp() {
         window = new MockWindow();
         screenshotManager = new MockScreenshotManager();
-        inputHandler = new InputHandler(window, screenshotManager, new Camera(1f, new Vector3f()));
+        // Create a camera at position (0, 0, 0) with aspect ratio 1.0
+        camera = new Camera(1.0f, new Vector3f(0, 0, 0));
+        inputHandler = new InputHandler(window, screenshotManager, camera);
     }
 
     @Test
@@ -111,5 +120,77 @@ class InputHandlerTest {
         // Verify screenshot was taken
         assertTrue(screenshotManager.wasScreenshotTaken());
         assertEquals(1, screenshotManager.getLastWindowHandle());
+    }
+
+    @Test
+    void testWKeyMovesForward() {
+        // Test that pressing W key moves the camera forward
+        Vector3f initialPosition = camera.getPosition();
+        assertEquals(0, initialPosition.x, DELTA);
+        assertEquals(0, initialPosition.y, DELTA);
+        assertEquals(0, initialPosition.z, DELTA);
+
+        // Simulate pressing W key
+        window.simulateKeyPress(GLFW_KEY_W, GLFW_REPEAT);
+
+        // Verify camera moved forward (decreased Z)
+        Vector3f newPosition = camera.getPosition();
+        assertEquals(0, newPosition.x, DELTA);
+        assertEquals(0, newPosition.y, DELTA);
+        assertTrue(newPosition.z < 0, "Camera should move forward (negative Z)");
+    }
+
+    @Test
+    void testSKeyMovesBackward() {
+        // Test that pressing S key moves the camera backward
+        Vector3f initialPosition = camera.getPosition();
+        assertEquals(0, initialPosition.x, DELTA);
+        assertEquals(0, initialPosition.y, DELTA);
+        assertEquals(0, initialPosition.z, DELTA);
+
+        // Simulate pressing S key
+        window.simulateKeyPress(GLFW_KEY_S, GLFW_REPEAT);
+
+        // Verify camera moved backward (increased Z)
+        Vector3f newPosition = camera.getPosition();
+        assertEquals(0, newPosition.x, DELTA);
+        assertEquals(0, newPosition.y, DELTA);
+        assertTrue(newPosition.z > 0, "Camera should move backward (positive Z)");
+    }
+
+    @Test
+    void testAKeyMovesLeft() {
+        // Test that pressing A key moves the camera left
+        Vector3f initialPosition = camera.getPosition();
+        assertEquals(0, initialPosition.x, DELTA);
+        assertEquals(0, initialPosition.y, DELTA);
+        assertEquals(0, initialPosition.z, DELTA);
+
+        // Simulate pressing A key
+        window.simulateKeyPress(GLFW_KEY_A, GLFW_REPEAT);
+
+        // Verify camera moved left (decreased X)
+        Vector3f newPosition = camera.getPosition();
+        assertTrue(newPosition.x < 0, "Camera should move left (negative X)");
+        assertEquals(0, newPosition.y, DELTA);
+        assertEquals(0, newPosition.z, DELTA);
+    }
+
+    @Test
+    void testDKeyMovesRight() {
+        // Test that pressing D key moves the camera right
+        Vector3f initialPosition = camera.getPosition();
+        assertEquals(0, initialPosition.x, DELTA);
+        assertEquals(0, initialPosition.y, DELTA);
+        assertEquals(0, initialPosition.z, DELTA);
+
+        // Simulate pressing D key
+        window.simulateKeyPress(GLFW_KEY_D, GLFW_REPEAT);
+
+        // Verify camera moved right (increased X)
+        Vector3f newPosition = camera.getPosition();
+        assertTrue(newPosition.x > 0, "Camera should move right (positive X)");
+        assertEquals(0, newPosition.y, DELTA);
+        assertEquals(0, newPosition.z, DELTA);
     }
 }
