@@ -59,7 +59,7 @@ public class Renderer {
     public void renderLoop() {
         // Timing variables
         long lastFrameTime = System.nanoTime();
-        float deltaTime = 0.0f;
+        float deltaTime;
         
         // Run the rendering loop until the window should close
         while (!window.shouldClose()) {
