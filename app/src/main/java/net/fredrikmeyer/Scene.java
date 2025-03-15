@@ -13,7 +13,7 @@ import org.lwjgl.BufferUtils;
 /**
  * Represents a 3D scene with models, textures, and transformations.
  */
-public class Scene {
+public class Scene implements IScene {
 
     private final Camera camera;
     private VertexArrayObject vao;
