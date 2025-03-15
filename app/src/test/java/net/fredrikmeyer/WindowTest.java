@@ -14,7 +14,7 @@ class WindowTest {
         private Window.KeyCallback keyCallback;
         
         public TestWindow(int width, int height, String title, boolean resizable) {
-            super(width, height, title, resizable);
+            super(WindowDimensions.of(width, height), title, resizable);
         }
         
         @Override

@@ -1,7 +1,36 @@
 package net.fredrikmeyer;
 
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
-import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.glfw.GLFW.GLFW_CONTEXT_VERSION_MAJOR;
+import static org.lwjgl.glfw.GLFW.GLFW_CONTEXT_VERSION_MINOR;
+import static org.lwjgl.glfw.GLFW.GLFW_FALSE;
+import static org.lwjgl.glfw.GLFW.GLFW_OPENGL_CORE_PROFILE;
+import static org.lwjgl.glfw.GLFW.GLFW_OPENGL_FORWARD_COMPAT;
+import static org.lwjgl.glfw.GLFW.GLFW_OPENGL_PROFILE;
+import static org.lwjgl.glfw.GLFW.GLFW_RESIZABLE;
+import static org.lwjgl.glfw.GLFW.GLFW_TRUE;
+import static org.lwjgl.glfw.GLFW.GLFW_VISIBLE;
+import static org.lwjgl.glfw.GLFW.glfwCreateWindow;
+import static org.lwjgl.glfw.GLFW.glfwDefaultWindowHints;
+import static org.lwjgl.glfw.GLFW.glfwDestroyWindow;
+import static org.lwjgl.glfw.GLFW.glfwGetPrimaryMonitor;
+import static org.lwjgl.glfw.GLFW.glfwGetVideoMode;
+import static org.lwjgl.glfw.GLFW.glfwGetWindowSize;
+import static org.lwjgl.glfw.GLFW.glfwInit;
+import static org.lwjgl.glfw.GLFW.glfwMakeContextCurrent;
+import static org.lwjgl.glfw.GLFW.glfwPollEvents;
+import static org.lwjgl.glfw.GLFW.glfwSetCursorPosCallback;
+import static org.lwjgl.glfw.GLFW.glfwSetKeyCallback;
+import static org.lwjgl.glfw.GLFW.glfwSetMouseButtonCallback;
+import static org.lwjgl.glfw.GLFW.glfwSetScrollCallback;
+import static org.lwjgl.glfw.GLFW.glfwSetWindowPos;
+import static org.lwjgl.glfw.GLFW.glfwSetWindowShouldClose;
+import static org.lwjgl.glfw.GLFW.glfwShowWindow;
+import static org.lwjgl.glfw.GLFW.glfwSwapBuffers;
+import static org.lwjgl.glfw.GLFW.glfwSwapInterval;
+import static org.lwjgl.glfw.GLFW.glfwTerminate;
+import static org.lwjgl.glfw.GLFW.glfwWindowHint;
+import static org.lwjgl.glfw.GLFW.glfwWindowShouldClose;
 import static org.lwjgl.opengl.GL11.GL_TRUE;
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.system.MemoryUtil.NULL;
@@ -16,6 +45,7 @@ import org.lwjgl.system.MemoryStack;
  * Manages the GLFW window and OpenGL context.
  */
 public class Window {
+
     private long windowHandle;
     private int width;
     private int height;
@@ -25,14 +55,12 @@ public class Window {
     /**
      * Creates a new Window with the specified dimensions and title.
      *
-     * @param width     the width of the window
-     * @param height    the height of the window
      * @param title     the title of the window
      * @param resizable whether the window is resizable
      */
-    public Window(int width, int height, String title, boolean resizable) {
-        this.width = width;
-        this.height = height;
+    public Window(WindowDimensions windowDimensions, String title, boolean resizable) {
+        this.width = windowDimensions.width();
+        this.height = windowDimensions.height();
         this.title = title;
         this.resizable = resizable;
     }
@@ -119,7 +147,7 @@ public class Window {
      * @param callback the key callback lambda
      */
     public void setKeyCallback(KeyCallback callback) {
-        glfwSetKeyCallback(windowHandle, (window, key, scancode, action, mods) -> 
+        glfwSetKeyCallback(windowHandle, (window, key, scancode, action, mods) ->
             callback.invoke(window, key, scancode, action, mods));
     }
 
@@ -129,7 +157,7 @@ public class Window {
      * @param callback the cursor position callback lambda
      */
     public void setCursorPosCallback(CursorPosCallback callback) {
-        glfwSetCursorPosCallback(windowHandle, (window, xpos, ypos) -> 
+        glfwSetCursorPosCallback(windowHandle, (window, xpos, ypos) ->
             callback.invoke(window, xpos, ypos));
     }
 
@@ -139,7 +167,7 @@ public class Window {
      * @param callback the mouse button callback lambda
      */
     public void setMouseButtonCallback(MouseButtonCallback callback) {
-        glfwSetMouseButtonCallback(windowHandle, (window, button, action, mods) -> 
+        glfwSetMouseButtonCallback(windowHandle, (window, button, action, mods) ->
             callback.invoke(window, button, action, mods));
     }
 
@@ -149,7 +177,7 @@ public class Window {
      * @param callback the scroll callback lambda
      */
     public void setScrollCallback(ScrollCallback callback) {
-        glfwSetScrollCallback(windowHandle, (window, xoffset, yoffset) -> 
+        glfwSetScrollCallback(windowHandle, (window, xoffset, yoffset) ->
             callback.invoke(window, xoffset, yoffset));
     }
 
@@ -158,6 +186,7 @@ public class Window {
      */
     @FunctionalInterface
     public interface KeyCallback {
+
         void invoke(long window, int key, int scancode, int action, int mods);
     }
 
@@ -166,6 +195,7 @@ public class Window {
      */
     @FunctionalInterface
     public interface CursorPosCallback {
+
         void invoke(long window, double xpos, double ypos);
     }
 
@@ -174,6 +204,7 @@ public class Window {
      */
     @FunctionalInterface
     public interface MouseButtonCallback {
+
         void invoke(long window, int button, int action, int mods);
     }
 
@@ -182,6 +213,7 @@ public class Window {
      */
     @FunctionalInterface
     public interface ScrollCallback {
+
         void invoke(long window, double xoffset, double yoffset);
     }
 

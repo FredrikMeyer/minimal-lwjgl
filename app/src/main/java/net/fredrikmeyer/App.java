@@ -41,7 +41,7 @@ public class App {
      */
     private void init() {
         // Create the window
-        window = new Window(600, 600, "Hello World!", true);
+        window = new Window(WindowDimensions.of(600, 600), "Hello World!", true);
         window.init();
 
         // Create resource loader
@@ -52,7 +52,7 @@ public class App {
 
         // Create the scene with the window's aspect ratio
         float aspectRatio = (float) window.getWidth() / window.getHeight();
-        Camera camera = new Camera(aspectRatio, new Vector3f(0, 0, 2));
+        Camera camera = new Camera(aspectRatio, new Vector3f(0f, 0f, 2f));
         scene = new Scene(resourceLoader, camera);
 
         // Create the input handler

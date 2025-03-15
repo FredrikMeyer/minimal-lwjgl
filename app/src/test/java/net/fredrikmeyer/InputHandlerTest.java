@@ -22,7 +22,7 @@ class InputHandlerTest {
         private double[] cursorPos = new double[] {0, 0};
 
         public MockWindow() {
-            super(300, 300, "Mock Window", true);
+            super(WindowDimensions.of(300, 300), "Mock Window", true);
         }
 
         @Override

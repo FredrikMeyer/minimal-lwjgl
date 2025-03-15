@@ -1,5 +1,6 @@
 package net.fredrikmeyer.algcurve;
 
+import net.fredrikmeyer.WindowDimensions;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFWErrorCallback;
 
@@ -41,7 +42,7 @@ public class App {
      */
     private void init() {
         // Create the window
-        window = new Window(600, 600, "Algebraic Curve Visualization", true);
+        window = new Window(WindowDimensions.of(600, 600), "Algebraic Curve Visualization", true);
         window.init();
 
         // Create the scene

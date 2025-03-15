@@ -1,7 +1,9 @@
 package net.fredrikmeyer;
 
+import java.nio.FloatBuffer;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.lwjgl.BufferUtils;
 
 public class Camera {
 
@@ -61,6 +63,12 @@ public class Camera {
         return projection.mul(view);
     }
 
+    FloatBuffer matrixBuffer(float fovDeg, float nearPlane, float farPlane) {
+        var fb = BufferUtils.createFloatBuffer(16);
+        matrix(fovDeg, nearPlane, farPlane).get(fb);
+        return fb;
+    }
+
     /**
      * Zooms the camera in or out.
      *
@@ -95,6 +103,8 @@ public class Camera {
         orientation.set(rotated);
         orientation.normalize(); // Ensure the orientation vector stays normalized
     }
+
+
 
     /**
      * Rotates the camera view vertically (pitch).
