@@ -26,10 +26,11 @@ public class Scene {
     private float rotation = 0.0f;
 
     /**
-     * Creates a new Scene with the specified resources.
+     * Constructs a new Scene instance, initializing the shader, geometry, texture, and camera for
+     * the scene.
      *
-     * @param resourceLoader the resource loader to use for loading resources
-     * @param camera
+     * @param resourceLoader the ResourceLoader used to load shaders and textures
+     * @param camera         the Camera object used to define the view and orientation of the scene
      */
     public Scene(ResourceLoader resourceLoader, Camera camera) {
         // Load shader

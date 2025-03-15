@@ -53,8 +53,7 @@ public class App {
         // Create the scene with the window's aspect ratio
         float aspectRatio = (float) window.getWidth() / window.getHeight();
         Camera camera = new Camera(aspectRatio, new Vector3f(0, 0, 2));
-        scene = new Scene(resourceLoader,
-            camera);
+        scene = new Scene(resourceLoader, camera);
 
         // Create the input handler
         inputHandler = new InputHandler(window, screenshotManager, camera);
