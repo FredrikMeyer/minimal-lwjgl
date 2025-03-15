@@ -124,11 +124,65 @@ public class Window {
     }
 
     /**
+     * Sets a cursor position callback for the window using a lambda expression.
+     *
+     * @param callback the cursor position callback lambda
+     */
+    public void setCursorPosCallback(CursorPosCallback callback) {
+        glfwSetCursorPosCallback(windowHandle, (window, xpos, ypos) -> 
+            callback.invoke(window, xpos, ypos));
+    }
+
+    /**
+     * Sets a mouse button callback for the window using a lambda expression.
+     *
+     * @param callback the mouse button callback lambda
+     */
+    public void setMouseButtonCallback(MouseButtonCallback callback) {
+        glfwSetMouseButtonCallback(windowHandle, (window, button, action, mods) -> 
+            callback.invoke(window, button, action, mods));
+    }
+
+    /**
+     * Sets a scroll callback for the window using a lambda expression.
+     *
+     * @param callback the scroll callback lambda
+     */
+    public void setScrollCallback(ScrollCallback callback) {
+        glfwSetScrollCallback(windowHandle, (window, xoffset, yoffset) -> 
+            callback.invoke(window, xoffset, yoffset));
+    }
+
+    /**
      * Functional interface for key callbacks.
      */
     @FunctionalInterface
     public interface KeyCallback {
         void invoke(long window, int key, int scancode, int action, int mods);
+    }
+
+    /**
+     * Functional interface for cursor position callbacks.
+     */
+    @FunctionalInterface
+    public interface CursorPosCallback {
+        void invoke(long window, double xpos, double ypos);
+    }
+
+    /**
+     * Functional interface for mouse button callbacks.
+     */
+    @FunctionalInterface
+    public interface MouseButtonCallback {
+        void invoke(long window, int button, int action, int mods);
+    }
+
+    /**
+     * Functional interface for scroll callbacks.
+     */
+    @FunctionalInterface
+    public interface ScrollCallback {
+        void invoke(long window, double xoffset, double yoffset);
     }
 
     /**

@@ -41,7 +41,7 @@ public class App {
      */
     private void init() {
         // Create the window
-        window = new Window(300, 300, "Hello World!", true);
+        window = new Window(600, 600, "Hello World!", true);
         window.init();
 
         // Create resource loader

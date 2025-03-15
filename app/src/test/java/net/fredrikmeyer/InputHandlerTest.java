@@ -7,14 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_A;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_D;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_F2;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_S;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_W;
-import static org.lwjgl.glfw.GLFW.GLFW_RELEASE;
-import static org.lwjgl.glfw.GLFW.GLFW_REPEAT;
+import static org.lwjgl.glfw.GLFW.*;
 
 class InputHandlerTest {
 
@@ -23,6 +16,10 @@ class InputHandlerTest {
 
         private boolean shouldClose = false;
         private Window.KeyCallback keyCallback;
+        private Window.MouseButtonCallback mouseButtonCallback;
+        private Window.CursorPosCallback cursorPosCallback;
+        private Window.ScrollCallback scrollCallback;
+        private double[] cursorPos = new double[] {0, 0};
 
         public MockWindow() {
             super(300, 300, "Mock Window", true);
@@ -36,6 +33,21 @@ class InputHandlerTest {
         @Override
         public void setKeyCallback(Window.KeyCallback callback) {
             this.keyCallback = callback;
+        }
+
+        @Override
+        public void setMouseButtonCallback(Window.MouseButtonCallback callback) {
+            this.mouseButtonCallback = callback;
+        }
+
+        @Override
+        public void setCursorPosCallback(Window.CursorPosCallback callback) {
+            this.cursorPosCallback = callback;
+        }
+
+        @Override
+        public void setScrollCallback(Window.ScrollCallback callback) {
+            this.scrollCallback = callback;
         }
 
         @Override
@@ -58,6 +70,35 @@ class InputHandlerTest {
             if (keyCallback != null) {
                 keyCallback.invoke(1, key, 0, action, 0);
             }
+        }
+
+        // Method to simulate mouse button press
+        public void simulateMouseButtonPress(int button, int action) {
+            if (mouseButtonCallback != null) {
+                mouseButtonCallback.invoke(1, button, action, 0);
+            }
+        }
+
+        // Method to simulate cursor position change
+        public void simulateCursorPos(double xpos, double ypos) {
+            cursorPos[0] = xpos;
+            cursorPos[1] = ypos;
+            if (cursorPosCallback != null) {
+                cursorPosCallback.invoke(1, xpos, ypos);
+            }
+        }
+
+        // Method to simulate scroll
+        public void simulateScroll(double xoffset, double yoffset) {
+            if (scrollCallback != null) {
+                scrollCallback.invoke(1, xoffset, yoffset);
+            }
+        }
+
+        // Override glfwGetCursorPos to return the simulated cursor position
+        @Override
+        public void pollEvents() {
+            // Do nothing - we don't want to poll events in tests
         }
     }
 
@@ -192,5 +233,86 @@ class InputHandlerTest {
         assertTrue(newPosition.x > 0, "Camera should move right (positive X)");
         assertEquals(0, newPosition.y, DELTA);
         assertEquals(0, newPosition.z, DELTA);
+    }
+
+    @Test
+    void testMouseMovementRotatesCamera() {
+        // Test that dragging the mouse rotates the camera view
+        Vector3f initialOrientation = camera.getOrientation();
+        assertEquals(0, initialOrientation.x, DELTA);
+        assertEquals(0, initialOrientation.y, DELTA);
+        assertEquals(-1, initialOrientation.z, DELTA);
+
+        // Verify position doesn't change
+        Vector3f initialPosition = camera.getPosition();
+        assertEquals(0, initialPosition.x, DELTA);
+        assertEquals(0, initialPosition.y, DELTA);
+        assertEquals(0, initialPosition.z, DELTA);
+
+        // Simulate mouse button press and movement
+        window.simulateMouseButtonPress(GLFW_MOUSE_BUTTON_LEFT, GLFW_PRESS);
+        window.simulateCursorPos(100, 100); // Initial position
+        window.simulateCursorPos(200, 150); // Move right and down
+
+        // Verify camera orientation changed but position didn't
+        Vector3f newOrientation = camera.getOrientation();
+        assertNotEquals(initialOrientation.x, newOrientation.x, DELTA, "Camera orientation should change");
+        assertNotEquals(initialOrientation.y, newOrientation.y, DELTA, "Camera orientation should change");
+
+        Vector3f newPosition = camera.getPosition();
+        assertEquals(initialPosition.x, newPosition.x, DELTA, "Camera position should not change");
+        assertEquals(initialPosition.y, newPosition.y, DELTA, "Camera position should not change");
+        assertEquals(initialPosition.z, newPosition.z, DELTA, "Camera position should not change");
+
+        // Simulate mouse button release
+        window.simulateMouseButtonPress(GLFW_MOUSE_BUTTON_LEFT, GLFW_RELEASE);
+    }
+
+    @Test
+    void testMouseWheelZoomsCamera() {
+        // Test that scrolling the mouse wheel zooms the camera
+        float initialZoom = camera.getZoom();
+        assertEquals(1.0f, initialZoom, DELTA);
+
+        // Simulate scrolling up (zoom in)
+        window.simulateScroll(0, 1);
+
+        // Verify camera zoomed in (increased zoom)
+        float newZoom = camera.getZoom();
+        assertTrue(newZoom > initialZoom, "Camera should zoom in (increased zoom)");
+
+        // Simulate scrolling down (zoom out)
+        window.simulateScroll(0, -2);
+
+        // Verify camera zoomed out (decreased zoom)
+        float finalZoom = camera.getZoom();
+        assertTrue(finalZoom < newZoom, "Camera should zoom out (decreased zoom)");
+    }
+
+    @Test
+    void testRKeyResetsCamera() {
+        // Test that pressing R key resets the camera position and zoom
+
+        // Move and zoom the camera
+        window.simulateKeyPress(GLFW_KEY_W, GLFW_REPEAT);
+        window.simulateKeyPress(GLFW_KEY_D, GLFW_REPEAT);
+        window.simulateScroll(0, 1);
+
+        // Verify camera moved and zoomed
+        Vector3f movedPosition = camera.getPosition();
+        float zoomedZoom = camera.getZoom();
+        assertTrue(movedPosition.x != 0 || movedPosition.z != 0, "Camera should have moved");
+        assertTrue(zoomedZoom != 1.0f, "Camera should have zoomed");
+
+        // Simulate pressing R key
+        window.simulateKeyPress(GLFW_KEY_R, GLFW_RELEASE);
+
+        // Verify camera reset to initial position and zoom
+        Vector3f resetPosition = camera.getPosition();
+        float resetZoom = camera.getZoom();
+        assertEquals(0, resetPosition.x, DELTA);
+        assertEquals(0, resetPosition.y, DELTA);
+        assertEquals(0, resetPosition.z, DELTA);
+        assertEquals(1.0f, resetZoom, DELTA);
     }
 }
