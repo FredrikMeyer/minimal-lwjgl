@@ -8,7 +8,6 @@ import static org.lwjgl.opengl.GL20.glGetUniformLocation;
 import static org.lwjgl.opengl.GL20.glUniformMatrix4fv;
 
 import java.nio.FloatBuffer;
-import org.joml.Vector3f;
 import org.lwjgl.BufferUtils;
 
 /**
@@ -25,16 +24,14 @@ public class Scene {
     private int[] indices;
 
     private float rotation = 0.0f;
-    private final float aspectRatio;
 
     /**
      * Creates a new Scene with the specified resources.
      *
      * @param resourceLoader the resource loader to use for loading resources
-     * @param aspectRatio    the aspect ratio (width/height) to use for rendering
+     * @param camera
      */
-    public Scene(ResourceLoader resourceLoader, float aspectRatio) {
-        this.aspectRatio = aspectRatio;
+    public Scene(ResourceLoader resourceLoader, Camera camera) {
         // Load shader
         shader = resourceLoader.loadShader("triangle/vertex.glsl", "triangle/fragment.glsl");
 
@@ -43,8 +40,7 @@ public class Scene {
 
         // Load texture
         texture = resourceLoader.loadTexture("icon.png");
-
-        camera = new Camera(this.aspectRatio, new Vector3f(0, 0, 2));
+        this.camera = camera;
     }
 
     /**

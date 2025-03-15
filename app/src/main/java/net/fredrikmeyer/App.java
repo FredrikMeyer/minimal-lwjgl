@@ -1,5 +1,6 @@
 package net.fredrikmeyer;
 
+import org.joml.Vector3f;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFWErrorCallback;
 
@@ -7,6 +8,7 @@ import org.lwjgl.glfw.GLFWErrorCallback;
  * Main application class that coordinates the components of the OpenGL application.
  */
 public class App {
+
     private Window window;
     private ResourceLoader resourceLoader;
     private Scene scene;
@@ -48,12 +50,14 @@ public class App {
         // Create the screenshot manager
         screenshotManager = new ScreenshotManager();
 
-        // Create the input handler
-        inputHandler = new InputHandler(window, screenshotManager);
-
         // Create the scene with the window's aspect ratio
         float aspectRatio = (float) window.getWidth() / window.getHeight();
-        scene = new Scene(resourceLoader, aspectRatio);
+        Camera camera = new Camera(aspectRatio, new Vector3f(0, 0, 2));
+        scene = new Scene(resourceLoader,
+            camera);
+
+        // Create the input handler
+        inputHandler = new InputHandler(window, screenshotManager, camera);
 
         // Create renderer
         renderer = new Renderer(window, scene);

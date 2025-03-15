@@ -25,4 +25,20 @@ public class Camera {
 
         return projection.mul(view);
     }
+
+    void moveForward(float amount) {
+        position.add(orientation.mul(amount, new Vector3f()));
+    }
+
+    void moveBackward(float amount) {
+        position.sub(orientation.mul(amount, new Vector3f()));
+    }
+
+    void moveLeft(float amount) {
+        position.sub(orientation.cross(up, new Vector3f()).mul(amount, new Vector3f()));
+    }
+
+    void moveRight(float amount) {
+        position.add(orientation.cross(up, new Vector3f()).mul(amount, new Vector3f()));
+    }
 }
