@@ -1,279 +1,86 @@
 package net.fredrikmeyer;
 
-import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
-import static org.lwjgl.glfw.GLFW.GLFW_CONTEXT_VERSION_MAJOR;
-import static org.lwjgl.glfw.GLFW.GLFW_CONTEXT_VERSION_MINOR;
-import static org.lwjgl.glfw.GLFW.GLFW_FALSE;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_F2;
-import static org.lwjgl.glfw.GLFW.GLFW_OPENGL_CORE_PROFILE;
-import static org.lwjgl.glfw.GLFW.GLFW_OPENGL_FORWARD_COMPAT;
-import static org.lwjgl.glfw.GLFW.GLFW_OPENGL_PROFILE;
-import static org.lwjgl.glfw.GLFW.GLFW_RELEASE;
-import static org.lwjgl.glfw.GLFW.GLFW_RESIZABLE;
-import static org.lwjgl.glfw.GLFW.GLFW_TRUE;
-import static org.lwjgl.glfw.GLFW.GLFW_VISIBLE;
-import static org.lwjgl.glfw.GLFW.glfwCreateWindow;
-import static org.lwjgl.glfw.GLFW.glfwDefaultWindowHints;
-import static org.lwjgl.glfw.GLFW.glfwDestroyWindow;
-import static org.lwjgl.glfw.GLFW.glfwGetPrimaryMonitor;
-import static org.lwjgl.glfw.GLFW.glfwGetVideoMode;
-import static org.lwjgl.glfw.GLFW.glfwGetWindowSize;
-import static org.lwjgl.glfw.GLFW.glfwInit;
-import static org.lwjgl.glfw.GLFW.glfwMakeContextCurrent;
-import static org.lwjgl.glfw.GLFW.glfwPollEvents;
-import static org.lwjgl.glfw.GLFW.glfwSetErrorCallback;
-import static org.lwjgl.glfw.GLFW.glfwSetKeyCallback;
-import static org.lwjgl.glfw.GLFW.glfwSetWindowPos;
-import static org.lwjgl.glfw.GLFW.glfwSetWindowShouldClose;
-import static org.lwjgl.glfw.GLFW.glfwShowWindow;
-import static org.lwjgl.glfw.GLFW.glfwSwapBuffers;
-import static org.lwjgl.glfw.GLFW.glfwSwapInterval;
-import static org.lwjgl.glfw.GLFW.glfwTerminate;
-import static org.lwjgl.glfw.GLFW.glfwWindowHint;
-import static org.lwjgl.glfw.GLFW.glfwWindowShouldClose;
-import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11.GL_DEPTH_TEST;
-import static org.lwjgl.opengl.GL11.GL_FALSE;
-import static org.lwjgl.opengl.GL11.GL_FLOAT;
-import static org.lwjgl.opengl.GL11.GL_LINE;
-import static org.lwjgl.opengl.GL11.GL_TRUE;
-import static org.lwjgl.opengl.GL11.GL_UNSIGNED_INT;
-import static org.lwjgl.opengl.GL11.glClear;
-import static org.lwjgl.opengl.GL11.glDrawElements;
-import static org.lwjgl.opengl.GL11.glEnable;
-import static org.lwjgl.opengl.GL11C.GL_FRONT_AND_BACK;
-import static org.lwjgl.opengl.GL11C.GL_TRIANGLES;
-import static org.lwjgl.opengl.GL11C.glClearColor;
-import static org.lwjgl.opengl.GL11C.glPolygonMode;
-import static org.lwjgl.opengl.GL20.glGetUniformLocation;
-import static org.lwjgl.opengl.GL20.glUniform1f;
-import static org.lwjgl.opengl.GL20.glUniformMatrix4fv;
-import static org.lwjgl.system.MemoryStack.stackPush;
-import static org.lwjgl.system.MemoryUtil.NULL;
-
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
-import java.util.Objects;
-import org.joml.Matrix4d;
-import org.joml.Matrix4f;
-import org.joml.Vector3f;
-import org.lwjgl.BufferUtils;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFWErrorCallback;
-import org.lwjgl.glfw.GLFWVidMode;
-import org.lwjgl.opengl.GL;
-import org.lwjgl.system.MemoryStack;
 
+/**
+ * Main application class that coordinates the components of the OpenGL application.
+ */
 public class App {
-
-    private long window;
-    private VertexBufferObject vbo;
-    private Shader shader;
-    private VertexArrayObject vao;
-    private ElementBufferObject ebo;
+    private Window window;
+    private ResourceLoader resourceLoader;
+    private Scene scene;
+    private Renderer renderer;
+    private InputHandler inputHandler;
     private ScreenshotManager screenshotManager;
 
+    /**
+     * Runs the application.
+     */
     public void run() {
         System.out.println("Hello LWJGL " + Version.getVersion() + "!");
 
-        init();
-        loop();
-
-        clean();
-
-        // Free the window callbacks and destroy the window
-        glfwFreeCallbacks(window);
-        glfwDestroyWindow(window);
-
-        // Terminate GLFW and free the error callback
-        glfwTerminate();
-
-        Objects.requireNonNull(glfwSetErrorCallback(null)).free();
+        try {
+            init();
+            mainLoop();
+            cleanup();
+        } finally {
+            // Terminate GLFW and free the error callback
+            org.lwjgl.glfw.GLFW.glfwTerminate();
+            GLFWErrorCallback callback = org.lwjgl.glfw.GLFW.glfwSetErrorCallback(null);
+            if (callback != null) {
+                callback.free();
+            }
+        }
     }
 
+    /**
+     * Initializes the application components.
+     */
     private void init() {
-        // Set up an error callback. The default implementation
-        // will print the error message in System.err.
-        GLFWErrorCallback.createPrint(System.err).set();
-
-        // Initialize GLFW. Most GLFW functions will not work before doing this.
-        if (!glfwInit()) {
-            throw new IllegalStateException("Unable to initialize GLFW");
-        }
-
-        // Configure GLFW
-        glfwDefaultWindowHints(); // optional, the current window hints are already the default
-        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // the window will stay hidden after creation
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE); // the window will be resizable
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-
         // Create the window
-        window = glfwCreateWindow(300, 300, "Hello World!", NULL, NULL);
-        if (window == NULL) {
-            glfwTerminate(); // ?
-            throw new RuntimeException("Failed to create the GLFW window");
-        }
+        window = new Window(300, 300, "Hello World!", true);
+        window.init();
 
-        setKeyCallback();
+        // Create resource loader
+        resourceLoader = new ResourceLoader();
 
-        // Get the thread stack and push a new frame
-        centerWindow();
-
-        // Make the OpenGL context current
-        glfwMakeContextCurrent(window);
-        // Enable v-sync
-        glfwSwapInterval(1);
-
-        // Make the window visible
-        glfwShowWindow(window);
-
-        // Initialize screenshot manager
+        // Create the screenshot manager
         screenshotManager = new ScreenshotManager();
+
+        // Create the input handler
+        inputHandler = new InputHandler(window, screenshotManager);
+
+        // Create the scene with the window's aspect ratio
+        float aspectRatio = (float) window.getWidth() / window.getHeight();
+        scene = new Scene(resourceLoader, aspectRatio);
+
+        // Create renderer
+        renderer = new Renderer(window, scene);
     }
 
-    private void loop() {
-        // This line is critical for LWJGL's interoperation with GLFW's
-        // OpenGL context, or any context that is managed externally.
-        // LWJGL detects the context that is current in the current thread,
-        // creates the GLCapabilities instance and makes the OpenGL
-        // bindings available for use.
-        var caps = GL.createCapabilities();
-        System.out.println("Forward compat: " + caps.forwardCompatible);
-
-        shader = new Shader(
-            Utils.loadResource("triangle/vertex.glsl"),
-            Utils.loadResource("triangle/fragment.glsl"));
-
-        float[] vertices = new float[]
-            { //     COORDINATES     /        COLORS      /   TexCoord  //
-                -0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	0.0f, 0.0f,
-                -0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	5.0f, 0.0f,
-                0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	0.0f, 0.0f,
-                0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	5.0f, 0.0f,
-                0.0f, 0.8f,  0.0f,     0.92f, 0.86f, 0.76f,	2.5f, 5.0f
-            };
-
-        int[] indices = new int[]{
-            0, 1, 2,
-            0, 2, 3,
-            0, 1, 4,
-            1, 2, 4,
-            2, 3, 4,
-            3, 0, 4
-        };
-
-        vao = new VertexArrayObject();
-        vao.bind();
-        vbo = new VertexBufferObject(vertices);
-        ebo = new ElementBufferObject(indices);
-
-        vao.linkAttributes(vbo, 0, 3, GL_FLOAT, 8 * 4, 0);
-        vao.linkAttributes(vbo, 1, 3, GL_FLOAT, 8 * 4, 3 * 4);
-        vao.linkAttributes(vbo, 2, 2, GL_FLOAT, 8 * 4, 6 * 4);
-
-        vao.unbind();
-        vbo.unbind();
-        ebo.unbind();
-
-        var uniId = glGetUniformLocation(shader.shaderProgram(), "scale");
-
-        // Texture path
-        var byteBuffer = Utils.loadResourceByteBuffer("icon.png");
-
-        var texture = new Texture(byteBuffer);
-
-        // Enables the Depth Buffer
-        glEnable(GL_DEPTH_TEST);
-
-
-        // Run the rendering loop until the user has attempted to close
-        // the window or has pressed the ESCAPE key.
-        var scale = 0.5f;
-        var rotation = 0.0f;
-        while (!glfwWindowShouldClose(window)) {
-            // Clear the screen
-            glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
-            // Clean the back buffer and assign the new color to it
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-            shader.activate();
-
-            FloatBuffer fbModel = BufferUtils.createFloatBuffer(16);
-            Matrix4f modelMatrix = new Matrix4f().rotate(rotation, 0, 1, 0);
-            modelMatrix.get(fbModel);
-            FloatBuffer fbProjection = BufferUtils.createFloatBuffer(16);
-            Matrix4f projectionMatrix = new Matrix4f().perspective(45, 300.0f / 300.0f, 0.1f, 100.0f);
-            projectionMatrix.get(fbProjection);
-            FloatBuffer fbView = BufferUtils.createFloatBuffer(16);
-            Matrix4f viewMatrix = new Matrix4f().translate(new Vector3f(0.0f, -0.5f, -2.0f));
-            viewMatrix.get(fbView);
-
-            rotation += 0.01f;
-
-            var modelLoc = glGetUniformLocation(shader.shaderProgram(), "model");
-            glUniformMatrix4fv(modelLoc, false, fbModel);
-            var viewLoc = glGetUniformLocation(shader.shaderProgram(), "view");
-            glUniformMatrix4fv(viewLoc, false, fbView);
-            var projLoc = glGetUniformLocation(shader.shaderProgram(), "proj");
-            glUniformMatrix4fv(projLoc, false, fbProjection);
-
-            glUniform1f(uniId, (float) (Math.sin(scale) + 1));
-            texture.bind();
-            vao.bind();
-
-            glDrawElements(GL_TRIANGLES, indices.length, GL_UNSIGNED_INT, 0);
-            glfwSwapBuffers(window);
-            glfwPollEvents();
-        }
-
+    /**
+     * Runs the main application loop.
+     */
+    private void mainLoop() {
+        // Run the rendering loop
+        renderer.renderLoop();
     }
 
-    private void clean() {
-        vao.delete();
-        vbo.delete();
-        ebo.delete();
-        shader.delete();
+    /**
+     * Cleans up resources used by the application.
+     */
+    private void cleanup() {
+        scene.cleanup();
+        window.destroy();
     }
 
+    /**
+     * Application entry point.
+     *
+     * @param args command line arguments
+     */
     public static void main(String[] args) {
         new App().run();
-    }
-
-    private void setKeyCallback() {
-        // Set up a key callback. It will be called every time a key is pressed, repeated or released.
-        //noinspection resource
-        glfwSetKeyCallback(window, (window, key, scancode, action, mods) -> {
-            if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
-                glfwSetWindowShouldClose(window, true); // We will detect this in the rendering loop
-            } else if (key == GLFW_KEY_F2 && action == GLFW_RELEASE) {
-                screenshotManager.takeScreenshot(window);
-            }
-        });
-    }
-
-
-    private void centerWindow() {
-        try (MemoryStack stack = stackPush()) {
-            IntBuffer pWidth = stack.mallocInt(1); // int*
-            IntBuffer pHeight = stack.mallocInt(1); // int*
-
-            // Get the window size passed to glfwCreateWindow
-            glfwGetWindowSize(window, pWidth, pHeight);
-
-            // Get the resolution of the primary monitor
-            GLFWVidMode vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-
-            // Center the window
-            glfwSetWindowPos(
-                window,
-                (vidmode.width() - pWidth.get(0)) / 2,
-                (vidmode.height() - pHeight.get(0)) / 2
-            );
-        }
     }
 }
