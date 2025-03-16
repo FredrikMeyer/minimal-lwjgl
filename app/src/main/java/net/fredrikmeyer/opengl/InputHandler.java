@@ -4,6 +4,8 @@ import static org.lwjgl.glfw.GLFW.GLFW_KEY_A;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_D;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_F2;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_F3;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_F4;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_R;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_S;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_W;
@@ -52,6 +54,12 @@ public class InputHandler {
                 window.setShouldClose(true);
             } else if (key == GLFW_KEY_F2 && action == GLFW_RELEASE) {
                 screenshotManager.takeScreenshot(window.getWindowHandle());
+            } else if (key == GLFW_KEY_F3 && action == GLFW_RELEASE) {
+                // Start recording GIF
+                screenshotManager.startRecording();
+            } else if (key == GLFW_KEY_F4 && action == GLFW_RELEASE) {
+                // Stop recording GIF and save
+                screenshotManager.stopRecording();
             } else if (key == GLFW_KEY_R && action == GLFW_RELEASE) {
                 // Reset camera position and zoom when R is pressed
                 camera.reset();

@@ -1,9 +1,13 @@
 package net.fredrikmeyer.opengl.chladni;
 
+import net.fredrikmeyer.opengl.Camera;
 import net.fredrikmeyer.opengl.IScene;
+import net.fredrikmeyer.opengl.InputHandler;
 import net.fredrikmeyer.opengl.Renderer;
+import net.fredrikmeyer.opengl.ScreenshotManager;
 import net.fredrikmeyer.opengl.Window;
 import net.fredrikmeyer.opengl.WindowDimensions;
+import org.joml.Vector3f;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFWErrorCallback;
 
@@ -14,6 +18,8 @@ public class App {
     private Window window;
     private IScene scene;
     private Renderer renderer;
+    private ScreenshotManager screenshotManager;
+    private InputHandler inputHandler;
 
     /**
      * Runs the application.
@@ -46,15 +52,25 @@ public class App {
         // Create the scene
         scene = new Schladni();
 
-        // Create renderer
-        renderer = new Renderer(window, scene);
+        // Create screenshot manager
+        screenshotManager = new ScreenshotManager();
 
-        // Set up key callback for ESC key
-        window.setKeyCallback((window, key, scancode, action, mods) -> {
-            if (key == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE && action == org.lwjgl.glfw.GLFW.GLFW_RELEASE) {
-                org.lwjgl.glfw.GLFW.glfwSetWindowShouldClose(window, true);
-            }
-        });
+        // Create camera
+        float aspectRatio = (float) window.getWidth() / window.getHeight();
+        Camera camera = new Camera(aspectRatio, new Vector3f(0f, 0f, 2f));
+
+        // Create input handler
+        inputHandler = new InputHandler(window, screenshotManager, camera);
+
+        // Create renderer
+        renderer = new Renderer(window, scene, screenshotManager);
+
+//        // Set up key callback for ESC key
+//        window.setKeyCallback((window, key, scancode, action, mods) -> {
+//            if (key == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE && action == org.lwjgl.glfw.GLFW.GLFW_RELEASE) {
+//                org.lwjgl.glfw.GLFW.glfwSetWindowShouldClose(window, true);
+//            }
+//        });
     }
 
     /**

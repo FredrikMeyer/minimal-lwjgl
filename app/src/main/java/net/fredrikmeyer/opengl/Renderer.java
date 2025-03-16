@@ -13,16 +13,21 @@ import static org.lwjgl.opengl.GL11C.glClearColor;
 public class Renderer {
     private final Window window;
     private final IScene scene;
+    private final ScreenshotManager screenshotManager;
+    private int frameCounter = 0;
+    private static final int FRAME_CAPTURE_INTERVAL = 2; // Capture every 2nd frame to reduce file size
 
     /**
      * Creates a new Renderer for the specified window and scene.
      *
      * @param window the window to render to
      * @param scene the scene to render
+     * @param screenshotManager the screenshot manager for taking screenshots and recording GIFs
      */
-    public Renderer(Window window, IScene scene) {
+    public Renderer(Window window, IScene scene, ScreenshotManager screenshotManager) {
         this.window = window;
         this.scene = scene;
+        this.screenshotManager = screenshotManager;
         init();
     }
 
@@ -48,6 +53,14 @@ public class Renderer {
         scene.update(deltaTime);
         scene.render();
 
+        // Capture frame for GIF if recording is active
+        if (screenshotManager.isRecording()) {
+            frameCounter++;
+            if (frameCounter % FRAME_CAPTURE_INTERVAL == 0) {
+                screenshotManager.captureFrame(window.getWindowHandle());
+            }
+        }
+
         // Swap buffers and poll events
         window.swapBuffers();
         window.pollEvents();
@@ -70,6 +83,12 @@ public class Renderer {
 
             // Render a frame
             render(deltaTime);
+        }
+
+        // If recording is active when the window closes, save the GIF
+        if (screenshotManager.isRecording()) {
+            System.out.println("Window closed while recording, saving GIF...");
+            screenshotManager.stopRecording();
         }
     }
 }

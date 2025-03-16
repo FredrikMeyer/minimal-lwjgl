@@ -59,7 +59,7 @@ public class App {
         inputHandler = new InputHandler(window, screenshotManager, camera);
 
         // Create renderer
-        renderer = new Renderer(window, scene);
+        renderer = new Renderer(window, scene, screenshotManager);
     }
 
     /**

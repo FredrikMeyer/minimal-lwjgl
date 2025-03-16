@@ -2,6 +2,7 @@ package net.fredrikmeyer.opengl.algcurve;
 
 import net.fredrikmeyer.opengl.IScene;
 import net.fredrikmeyer.opengl.Renderer;
+import net.fredrikmeyer.opengl.ScreenshotManager;
 import net.fredrikmeyer.opengl.Window;
 import net.fredrikmeyer.opengl.WindowDimensions;
 import org.lwjgl.Version;
@@ -15,6 +16,7 @@ public class App {
     private Window window;
     private IScene scene;
     private Renderer renderer;
+    private ScreenshotManager screenshotManager;
 
     /**
      * Runs the application.
@@ -47,8 +49,11 @@ public class App {
         // Create the scene
         scene = new AlgCurveScene();
 
+        // Create screenshot manager
+        screenshotManager = new ScreenshotManager();
+
         // Create renderer
-        renderer = new Renderer(window, scene);
+        renderer = new Renderer(window, scene, screenshotManager);
 
         // Set up key callback for ESC key
         window.setKeyCallback((window, key, scancode, action, mods) -> {
