@@ -1,6 +1,5 @@
-package net.fredrikmeyer;
+package net.fredrikmeyer.opengl;
 
-import net.fredrikmeyer.opengl.ScreenshotManager;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.io.TempDir;

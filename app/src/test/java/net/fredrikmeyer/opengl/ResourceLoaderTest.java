@@ -1,6 +1,5 @@
-package net.fredrikmeyer;
+package net.fredrikmeyer.opengl;
 
-import net.fredrikmeyer.opengl.ResourceLoader;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import static org.junit.jupiter.api.Assertions.*;

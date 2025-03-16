@@ -1,6 +1,5 @@
-package net.fredrikmeyer;
+package net.fredrikmeyer.opengl;
 
-import net.fredrikmeyer.opengl.Camera;
 import org.joml.Vector3f;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;

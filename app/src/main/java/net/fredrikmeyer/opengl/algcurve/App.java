@@ -1,12 +1,11 @@
 package net.fredrikmeyer.opengl.algcurve;
 
-import net.fredrikmeyer.opengl.WindowDimensions;
-import org.lwjgl.Version;
-import org.lwjgl.glfw.GLFWErrorCallback;
-
 import net.fredrikmeyer.opengl.IScene;
 import net.fredrikmeyer.opengl.Renderer;
 import net.fredrikmeyer.opengl.Window;
+import net.fredrikmeyer.opengl.WindowDimensions;
+import org.lwjgl.Version;
+import org.lwjgl.glfw.GLFWErrorCallback;
 
 /**
  * Main application class for the algebraic curve visualization.
@@ -46,7 +45,7 @@ public class App {
         window.init();
 
         // Create the scene
-        scene = new net.fredrikmeyer.opengl.algcurve.AlgCurveScene();
+        scene = new AlgCurveScene();
 
         // Create renderer
         renderer = new Renderer(window, scene);
