@@ -1,6 +1,10 @@
 package net.fredrikmeyer;
 
-import org.checkerframework.checker.units.qual.C;
+import net.fredrikmeyer.opengl.Camera;
+import net.fredrikmeyer.opengl.InputHandler;
+import net.fredrikmeyer.opengl.ScreenshotManager;
+import net.fredrikmeyer.opengl.Window;
+import net.fredrikmeyer.opengl.WindowDimensions;
 import org.joml.Vector3f;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;

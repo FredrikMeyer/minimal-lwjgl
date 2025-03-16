@@ -90,6 +90,6 @@ java {
 
 application {
     // Define the main class for the application.
-    mainClass = "net.fredrikmeyer.minimal.App"
+    mainClass = "net.fredrikmeyer.opengl.minimal.App"
     applicationDefaultJvmArgs = listOf("-XstartOnFirstThread")
 }

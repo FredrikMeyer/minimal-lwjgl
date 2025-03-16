@@ -1,10 +1,9 @@
 package net.fredrikmeyer;
 
+import net.fredrikmeyer.opengl.ResourceLoader;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import static org.junit.jupiter.api.Assertions.*;
-
-import java.nio.ByteBuffer;
 
 class ResourceLoaderTest {
 
