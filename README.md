@@ -9,3 +9,11 @@ To run the tests, use the following command:
 ```bash
 ./gradlew test
 ```
+
+## Links
+
+Colormaps for OpenGL: https://github.com/kbinani/colormap-shaders/tree/master
+
+## Inspirasjon
+
+https://paulbourke.net/geometry/chladni/

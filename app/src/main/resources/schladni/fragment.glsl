@@ -49,15 +49,21 @@ void main() {
 
     float m = 5;
     float n = 3;
-    float L =  PI;
-
-    float amount = cos(n * x * L) * cos(m * y * L) - cos(m * x* L) * cos(n * y * L);
 
     float sinScaled = 0.5 * (sin(uTime) + 1.0);
+    float L =  PI;
+
+//    float amount = cos(n * x * L) * cos(m * y * L) - cos(m * x* L) * cos(n * y * L);
+    float amount = fract((0.5 + sinScaled) * 10 * (cos(n * x * L) * cos(m * y * L) - cos(m * x* L) * cos(n * y * L)));
+
 
 //    fragColor = vec4(vec3(step(sinScaled, (amount / 4.0) + 0.5)), 1.0);
     // https://paulbourke.net/geometry/chladni/
-    fragColor = colormap((amount / 4.0) + 0.5);
+    // https://www.reddit.com/r/processing/comments/1jb5lab/having_fun_with_the_chladni_patterns/
+    // https://github.com/kbinani/colormap-shaders/tree/master
+//    fragColor = colormap((amount / 4.0) + 0.5);
+    fragColor = colormap(amount);
+
 
 //    const float epsilon = 1e-2;
 //    if (abs(amount) < epsilon) {
