@@ -71,6 +71,10 @@ dependencies {
 ////    )
 }
 
+tasks.clean {
+    delete += setOf("bin")
+}
+
 testing {
     suites {
         // Configure the built-in test suite
