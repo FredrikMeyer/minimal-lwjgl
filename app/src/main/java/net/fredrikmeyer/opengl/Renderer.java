@@ -85,10 +85,16 @@ public class Renderer {
             render(deltaTime);
         }
 
-        // If recording is active when the window closes, save the GIF
+        // If recording is active when the window closes, save the GIF asynchronously
         if (screenshotManager.isRecording()) {
-            System.out.println("Window closed while recording, saving GIF...");
-            screenshotManager.stopRecording();
+            System.out.println("Window closed while recording, saving GIF asynchronously...");
+            screenshotManager.stopRecording().thenAccept(filename -> {
+                if (filename != null) {
+                    System.out.println("GIF saved successfully to: " + filename);
+                } else {
+                    System.out.println("Failed to save GIF");
+                }
+            });
         }
     }
 }

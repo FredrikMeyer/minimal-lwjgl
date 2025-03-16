@@ -87,6 +87,7 @@ public class App {
     private void cleanup() {
         scene.cleanup();
         window.destroy();
+        screenshotManager.cleanup();
     }
 
     /**

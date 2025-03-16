@@ -9,7 +9,7 @@ import java.util.Iterator;
 
 /**
  * Utility class for creating GIF animations from a sequence of BufferedImage frames.
- * Based on the GifSequenceWriter by Elliot Kroo (http://elliot.kroo.net/software/java/GifSequenceWriter/).
+ * Based on the GifSequenceWriter by Elliot Kroo (<a href="http://elliot.kroo.net/software/java/GifSequenceWriter/">...</a>).
  */
 public class GifSequenceWriter {
     protected ImageWriter gifWriter;

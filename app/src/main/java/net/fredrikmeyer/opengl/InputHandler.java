@@ -58,8 +58,14 @@ public class InputHandler {
                 // Start recording GIF
                 screenshotManager.startRecording();
             } else if (key == GLFW_KEY_F4 && action == GLFW_RELEASE) {
-                // Stop recording GIF and save
-                screenshotManager.stopRecording();
+                // Stop recording GIF and save asynchronously
+                screenshotManager.stopRecording().thenAccept(filename -> {
+                    if (filename != null) {
+                        System.out.println("GIF saved successfully to: " + filename);
+                    } else {
+                        System.out.println("Failed to save GIF");
+                    }
+                });
             } else if (key == GLFW_KEY_R && action == GLFW_RELEASE) {
                 // Reset camera position and zoom when R is pressed
                 camera.reset();

@@ -16,6 +16,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import javax.imageio.stream.FileImageOutputStream;
 import javax.imageio.stream.ImageOutputStream;
 import org.lwjgl.BufferUtils;
@@ -30,6 +33,7 @@ public class ScreenshotManager {
     private boolean isRecording = false;
     private List<BufferedImage> recordedFrames = new ArrayList<>();
     private static final int FRAME_DELAY_MS = 50; // 20 frames per second
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     /**
      * Creates a new ScreenshotManager with the default screenshots directory.
@@ -130,17 +134,17 @@ public class ScreenshotManager {
     }
 
     /**
-     * Stops recording frames and saves the GIF animation.
+     * Stops recording frames and saves the GIF animation asynchronously.
      * 
-     * @return The path to the saved GIF file, or null if saving failed
+     * @return A CompletableFuture that will be completed with the path to the saved GIF file, or null if saving failed
      */
-    public String stopRecording() {
+    public CompletableFuture<String> stopRecording() {
         if (isRecording) {
             isRecording = false;
-            System.out.println("GIF recording stopped, saving " + recordedFrames.size() + " frames");
-            return saveGif();
+            System.out.println("GIF recording stopped, saving " + recordedFrames.size() + " frames asynchronously");
+            return saveGifAsync();
         }
-        return null;
+        return CompletableFuture.completedFuture(null);
     }
 
     /**
@@ -248,11 +252,74 @@ public class ScreenshotManager {
     }
 
     /**
+     * Saves the recorded frames as a GIF animation asynchronously.
+     * 
+     * @return A CompletableFuture that will be completed with the path to the saved GIF file, or null if saving failed
+     */
+    private CompletableFuture<String> saveGifAsync() {
+        if (recordedFrames.isEmpty()) {
+            System.out.println("No frames to save");
+            return CompletableFuture.completedFuture(null);
+        }
+
+        // Create a copy of the frames to avoid concurrent modification
+        final List<BufferedImage> framesCopy = new ArrayList<>(recordedFrames);
+
+        // Submit the task to the executor service
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                // Generate filename with timestamp
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
+                String timestamp = dateFormat.format(new Date());
+                String filename = screenshotsDirectory + "/animation_" + timestamp + ".gif";
+
+                // Create output stream
+                File outputFile = new File(filename);
+                ImageOutputStream outputStream = new FileImageOutputStream(outputFile);
+
+                // Get dimensions from the first frame
+                BufferedImage firstFrame = framesCopy.get(0);
+
+                // Create GIF writer
+                GifSequenceWriter gifWriter = new GifSequenceWriter(
+                        outputStream,
+                        firstFrame.getType(),
+                        FRAME_DELAY_MS,
+                        true);  // Loop continuously
+
+                // Write all frames
+                for (BufferedImage frame : framesCopy) {
+                    gifWriter.writeToSequence(frame);
+                }
+
+                // Close the writer
+                gifWriter.close();
+                outputStream.close();
+
+                System.out.println("GIF animation saved to: " + filename);
+                return filename;
+            } catch (IOException e) {
+                System.err.println("Failed to save GIF: " + e.getMessage());
+                e.printStackTrace();
+                return null;
+            }
+        }, executorService);
+    }
+
+    /**
      * Checks if recording is currently active.
      * 
      * @return true if recording is active, false otherwise
      */
     public boolean isRecording() {
         return isRecording;
+    }
+
+    /**
+     * Cleans up resources used by the ScreenshotManager.
+     * This should be called when the application is shutting down.
+     */
+    public void cleanup() {
+        executorService.shutdown();
     }
 }
