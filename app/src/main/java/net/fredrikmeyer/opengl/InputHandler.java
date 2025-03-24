@@ -2,12 +2,21 @@ package net.fredrikmeyer.opengl;
 
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_A;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_D;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_DOWN;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_E;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_F;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_F2;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_F3;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_F4;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_PAGE_DOWN;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_PAGE_UP;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_Q;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_R;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_S;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_UP;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_W;
 import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT;
 import static org.lwjgl.glfw.GLFW.GLFW_PRESS;
@@ -72,17 +81,43 @@ public class InputHandler {
             }
 
             float speed = 0.1f;
-            if (key == GLFW_KEY_W && action == GLFW_REPEAT) {
+            // WASD keys for movement
+            if (key == GLFW_KEY_W && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
                 camera.moveForward(speed);
             }
-            if (key == GLFW_KEY_S && action == GLFW_REPEAT) {
+            if (key == GLFW_KEY_S && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
                 camera.moveBackward(speed);
             }
-            if (key == GLFW_KEY_A && action == GLFW_REPEAT) {
+            if (key == GLFW_KEY_A && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
                 camera.moveLeft(speed);
             }
-            if (key == GLFW_KEY_D && action == GLFW_REPEAT) {
+            if (key == GLFW_KEY_D && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
                 camera.moveRight(speed);
+            }
+
+            // Arrow keys for movement
+            if (key == GLFW_KEY_UP && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
+                camera.moveForward(speed);
+            }
+            if (key == GLFW_KEY_DOWN && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
+                camera.moveBackward(speed);
+            }
+            if (key == GLFW_KEY_LEFT && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
+                camera.moveLeft(speed);
+            }
+            if (key == GLFW_KEY_RIGHT && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
+                camera.moveRight(speed);
+            }
+
+            // Page Up/Down keys for camera angle adjustment (pitch)
+            float rotationSpeed = 0.05f;
+            if (key == GLFW_KEY_Q && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
+                // Look up
+                camera.rotateVertical(rotationSpeed);
+            }
+            if (key == GLFW_KEY_E && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
+                // Look down
+                camera.rotateVertical(-rotationSpeed);
             }
         });
 

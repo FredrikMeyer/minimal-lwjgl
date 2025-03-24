@@ -1,10 +1,13 @@
 package net.fredrikmeyer.opengl.raymarching;
 
+import net.fredrikmeyer.opengl.Camera;
 import net.fredrikmeyer.opengl.IScene;
+import net.fredrikmeyer.opengl.InputHandler;
 import net.fredrikmeyer.opengl.Renderer;
 import net.fredrikmeyer.opengl.ScreenshotManager;
 import net.fredrikmeyer.opengl.Window;
 import net.fredrikmeyer.opengl.WindowDimensions;
+import org.joml.Vector3f;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFWErrorCallback;
 
@@ -16,7 +19,9 @@ public class App {
     private Window window;
     private IScene scene;
     private Renderer renderer;
+    private InputHandler inputHandler;
     private ScreenshotManager screenshotManager;
+    private Camera camera;
 
     /**
      * Runs the application.
@@ -46,21 +51,21 @@ public class App {
         window = new Window(WindowDimensions.of(600, 600), "Ray Marching Visualization", true);
         window.init();
 
-        // Create the scene
-        scene = new RayMarchingScene();
-
-        // Create screenshot manager
+        // Create the screenshot manager
         screenshotManager = new ScreenshotManager();
+
+        // Create the camera with the window's aspect ratio
+        float aspectRatio = (float) window.getWidth() / window.getHeight();
+        camera = new Camera(aspectRatio, new Vector3f(0f, 0f, 5f));
+
+        // Create the scene
+        scene = new RayMarchingScene(camera);
+
+        // Create the input handler
+        inputHandler = new InputHandler(window, screenshotManager, camera);
 
         // Create renderer
         renderer = new Renderer(window, scene, screenshotManager);
-
-        // Set up key callback for ESC key
-        window.setKeyCallback((window, key, scancode, action, mods) -> {
-            if (key == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE && action == org.lwjgl.glfw.GLFW.GLFW_RELEASE) {
-                org.lwjgl.glfw.GLFW.glfwSetWindowShouldClose(window, true);
-            }
-        });
     }
 
     /**

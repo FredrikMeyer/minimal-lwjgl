@@ -8,12 +8,14 @@ import static org.lwjgl.opengl.GL20.glGetUniformLocation;
 import static org.lwjgl.opengl.GL20.glUniform1f;
 import static org.lwjgl.opengl.GL20.glUniform3f;
 
+import net.fredrikmeyer.opengl.Camera;
 import net.fredrikmeyer.opengl.ElementBufferObject;
 import net.fredrikmeyer.opengl.IScene;
 import net.fredrikmeyer.opengl.Shader;
 import net.fredrikmeyer.opengl.Utils;
 import net.fredrikmeyer.opengl.VertexArrayObject;
 import net.fredrikmeyer.opengl.VertexBufferObject;
+import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
 
 /**
@@ -28,12 +30,18 @@ public class RayMarchingScene implements IScene {
     private int[] quadIndices;
     private int uTimeId;
     private int uCameraPositionId;
+    private int uCameraOrientationId;
     private int uLightPositionId;
+    private Camera camera;
 
     /**
      * Constructs a new RayMarchingScene instance, initializing the shader and geometry for the scene.
+     * 
+     * @param camera the camera to use for rendering
      */
-    public RayMarchingScene() {
+    public RayMarchingScene(Camera camera) {
+        this.camera = camera;
+
         // Load shader
         shader = new Shader(
             Utils.loadResource("raymarching/vertex.glsl"),
@@ -45,6 +53,7 @@ public class RayMarchingScene implements IScene {
         // Get uniform locations
         uTimeId = glGetUniformLocation(shader.shaderProgram(), "uTime");
         uCameraPositionId = glGetUniformLocation(shader.shaderProgram(), "uCameraPosition");
+        uCameraOrientationId = glGetUniformLocation(shader.shaderProgram(), "uCameraOrientation");
         uLightPositionId = glGetUniformLocation(shader.shaderProgram(), "uLightPosition");
     }
 
@@ -89,10 +98,13 @@ public class RayMarchingScene implements IScene {
         float time = (float) GLFW.glfwGetTime();
         glUniform1f(uTimeId, time);
 
-        // Set camera position (orbiting around the origin)
-        float cameraX = (float) (Math.sin(time * 0.5) * 5.0);
-        float cameraZ = (float) (Math.cos(time * 0.5) * 5.0);
-        glUniform3f(uCameraPositionId, cameraX, 2.0f, cameraZ);
+        // Set camera position from the Camera object
+        Vector3f cameraPosition = camera.getPosition();
+        glUniform3f(uCameraPositionId, cameraPosition.x, cameraPosition.y, cameraPosition.z);
+
+        // Set camera orientation from the Camera object
+        Vector3f cameraOrientation = camera.getOrientation();
+        glUniform3f(uCameraOrientationId, cameraOrientation.x, cameraOrientation.y, cameraOrientation.z);
 
         // Set light position
         float lightX = (float) (Math.sin(time) * 3.0);

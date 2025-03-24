@@ -5,6 +5,7 @@ out vec4 fragColor;
 
 uniform float uTime;
 uniform vec3 uCameraPosition;
+uniform vec3 uCameraOrientation;
 uniform vec3 uLightPosition;
 
 const int MAX_STEPS = 100;
@@ -44,7 +45,7 @@ float sceneSDF(vec3 p) {
         p.y,
         -s * p.x + c * p.z
     );
-    
+
     // Hexagonal prism
     vec2 h = vec2(1.0, 0.5); // Radius and half-height
     return sdCutHollowSphere(q, 1.0, 0.5, 0.2);
@@ -66,34 +67,34 @@ vec3 calcNormal(vec3 p) {
 // Ray marching
 float rayMarch(vec3 ro, vec3 rd) {
     float depth = 0.0;
-    
+
     for (int i = 0; i < MAX_STEPS; i++) {
         vec3 p = ro + depth * rd;
         float dist = sceneSDF(p);
         depth += dist;
         if (dist < EPSILON || depth > MAX_DIST) break;
     }
-    
+
     return depth;
 }
 
 // Phong shading
 vec3 phongShading(vec3 p, vec3 normal, vec3 viewDir) {
     vec3 lightDir = normalize(uLightPosition - p);
-    
+
     // Material properties
     vec3 objectColor = vec3(0.7, 0.2, 0.3); // Reddish color
     float ambient = 0.1;
     float diffuse = max(dot(normal, lightDir), 0.0);
-    
+
     vec3 reflectDir = reflect(-lightDir, normal);
     float specular = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
-    
+
     // Calculate shadows
     float shadow = 1.0;
     float distToLight = length(uLightPosition - p);
     vec3 dirToLight = normalize(uLightPosition - p);
-    
+
     // March from point towards light
     float t = 0.02; // Start a bit away from the surface
     for (int i = 0; i < 32; i++) {
@@ -105,41 +106,39 @@ vec3 phongShading(vec3 p, vec3 normal, vec3 viewDir) {
         if (t >= distToLight) break;
         t += h;
     }
-    
+
     return (ambient + shadow * (diffuse + 0.5 * specular)) * objectColor;
 }
 
 void main() {
     // Screen coordinates
     vec2 uv = fragCoord;
-    
+
     // Camera setup
     vec3 ro = uCameraPosition; // Ray origin (camera position)
     vec3 rd = normalize(vec3(uv, 1.0)); // Ray direction
-    
-    // Rotate ray direction to look at origin
-    vec3 target = vec3(0.0, 0.0, 0.0);
+
+    // Use camera orientation
+    vec3 forward = uCameraOrientation;
     vec3 up = vec3(0.0, 1.0, 0.0);
-    
-    vec3 forward = normalize(target - ro);
-    vec3 right = normalize(cross(up, forward));
-    vec3 cameraUp = cross(forward, right);
-    
+    vec3 right = normalize(cross(forward, up));
+    vec3 cameraUp = normalize(cross(right, forward));
+
     rd = normalize(uv.x * right + uv.y * cameraUp + 1.5 * forward);
-    
+
     // Ray marching
     float dist = rayMarch(ro, rd);
-    
+
     if (dist < MAX_DIST) {
         // Hit point
         vec3 p = ro + dist * rd;
-        
+
         // Calculate normal
         vec3 normal = calcNormal(p);
-        
+
         // Shading
         vec3 color = phongShading(p, normal, -rd);
-        
+
         fragColor = vec4(color, 1.0);
     } else {
         // Sky color
