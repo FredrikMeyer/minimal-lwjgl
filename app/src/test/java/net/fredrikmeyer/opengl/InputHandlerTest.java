@@ -134,7 +134,7 @@ class InputHandlerTest {
         screenshotManager = new MockScreenshotManager();
         // Create a camera at position (0, 0, 0) with aspect ratio 1.0
         camera = new Camera(1.0f, new Vector3f(0, 0, 0));
-        inputHandler = new InputHandler(window, screenshotManager, camera);
+        inputHandler = InputHandler.create(window, screenshotManager, camera);
     }
 
     @Test

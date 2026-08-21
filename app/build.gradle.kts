@@ -42,6 +42,11 @@ dependencies {
     runtimeOnly(variantOf(libs.lwjgl.stb) { classifier(lwjglNatives) })
 }
 
+tasks.withType<JavaCompile>().configureEach {
+    // Treat compiler warnings as errors so lint regressions fail the build.
+    options.compilerArgs.addAll(listOf("-Xlint:all", "-Werror"))
+}
+
 tasks.clean {
     delete += setOf("bin")
 }
@@ -49,7 +54,7 @@ tasks.clean {
 testing {
     suites {
         // Configure the built-in test suite
-        @Suppress("UnstableApiUsage") val test by getting(JvmTestSuite::class) {
+        getByName<JvmTestSuite>("test") {
             // Use JUnit Jupiter test framework
             useJUnitJupiter(libs.versions.junit.jupiter)
         }

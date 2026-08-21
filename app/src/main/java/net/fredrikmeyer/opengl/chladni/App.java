@@ -60,7 +60,7 @@ public class App {
         Camera camera = new Camera(aspectRatio, new Vector3f(0f, 0f, 2f));
 
         // Create input handler
-        inputHandler = new InputHandler(window, screenshotManager, camera);
+        inputHandler = InputHandler.create(window, screenshotManager, camera);
 
         // Create renderer
         renderer = new Renderer(window, scene, screenshotManager);
