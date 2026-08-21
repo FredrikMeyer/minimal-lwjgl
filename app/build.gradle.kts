@@ -8,7 +8,7 @@ repositories {
     mavenCentral()
 }
 
-val lwjglVersion = "3.3.6"
+val lwjglVersion = "3.4.2"
 
 val lwjglNatives = Pair(
     System.getProperty("os.name")!!,
@@ -51,9 +51,9 @@ dependencies {
     // For textures
     implementation("org.lwjgl", "lwjgl-stb")
 //    implementation("org.lwjgl", "lwjgl-vulkan")
-    implementation("org.jspecify:jspecify:1.0.0")
+    implementation("org.jspecify:jspecify:1.0.1")
 
-    implementation("org.joml:joml:1.10.5")
+    implementation("org.joml:joml:1.10.9")
 
     runtimeOnly("org.lwjgl", "lwjgl", classifier = lwjglNatives)
 //    runtimeOnly("org.lwjgl", "lwjgl-assimp", classifier = lwjglNatives)
