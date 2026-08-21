@@ -3,13 +3,6 @@ plugins {
     application
 }
 
-repositories {
-    // Use Maven Central for resolving dependencies.
-    mavenCentral()
-}
-
-val lwjglVersion = "3.3.6"
-
 val lwjglNatives = Pair(
     System.getProperty("os.name")!!,
     System.getProperty("os.arch")!!
@@ -35,40 +28,18 @@ val lwjglNatives = Pair(
 
 
 dependencies {
-    // This dependency is used by the application.
-    implementation(libs.guava)
+    // The BOM aligns the versions of every LWJGL module below.
+    implementation(platform(libs.lwjgl.bom))
+    // To add another LWJGL module, declare it in gradle/libs.versions.toml
+    // and add it to the `lwjgl` bundle plus the natives list below.
+    implementation(libs.bundles.lwjgl)
+    implementation(libs.jspecify)
+    implementation(libs.joml)
 
-    implementation(platform("org.lwjgl:lwjgl-bom:$lwjglVersion"))
-
-    implementation("org.lwjgl", "lwjgl")
-//    implementation("org.lwjgl", "lwjgl-assimp")
-//    implementation("org.lwjgl", "lwjgl-bgfx")
-    implementation("org.lwjgl", "lwjgl-glfw")
-//    implementation("org.lwjgl", "lwjgl-nuklear")
-//    implementation("org.lwjgl", "lwjgl-openal")
-    implementation("org.lwjgl", "lwjgl-opengl")
-//    implementation("org.lwjgl", "lwjgl-par")
-    // For textures
-    implementation("org.lwjgl", "lwjgl-stb")
-//    implementation("org.lwjgl", "lwjgl-vulkan")
-    implementation("org.jspecify:jspecify:1.0.0")
-
-    implementation("org.joml:joml:1.10.5")
-
-    runtimeOnly("org.lwjgl", "lwjgl", classifier = lwjglNatives)
-//    runtimeOnly("org.lwjgl", "lwjgl-assimp", classifier = lwjglNatives)
-//    runtimeOnly("org.lwjgl", "lwjgl-bgfx", classifier = lwjglNatives)
-    runtimeOnly("org.lwjgl", "lwjgl-glfw", classifier = lwjglNatives)
-//    runtimeOnly("org.lwjgl", "lwjgl-nuklear", classifier = lwjglNatives)
-//    runtimeOnly("org.lwjgl", "lwjgl-openal", classifier = lwjglNatives)
-    runtimeOnly("org.lwjgl", "lwjgl-opengl", classifier = lwjglNatives)
-//    runtimeOnly("org.lwjgl", "lwjgl-par", classifier = lwjglNatives)
-    runtimeOnly("org.lwjgl", "lwjgl-stb", classifier = lwjglNatives)
-//    if (lwjglNatives == "natives-macos-arm64") runtimeOnly(
-////        "org.lwjgl",
-////        "lwjgl-vulkan",
-////        classifier = lwjglNatives
-////    )
+    runtimeOnly(variantOf(libs.lwjgl.core) { classifier(lwjglNatives) })
+    runtimeOnly(variantOf(libs.lwjgl.glfw) { classifier(lwjglNatives) })
+    runtimeOnly(variantOf(libs.lwjgl.opengl) { classifier(lwjglNatives) })
+    runtimeOnly(variantOf(libs.lwjgl.stb) { classifier(lwjglNatives) })
 }
 
 tasks.clean {
@@ -80,7 +51,7 @@ testing {
         // Configure the built-in test suite
         @Suppress("UnstableApiUsage") val test by getting(JvmTestSuite::class) {
             // Use JUnit Jupiter test framework
-            useJUnitJupiter("5.11.1")
+            useJUnitJupiter(libs.versions.junit.jupiter)
         }
     }
 }
