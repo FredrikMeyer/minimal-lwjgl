@@ -56,7 +56,7 @@ public class App {
         scene = new Scene(resourceLoader, camera);
 
         // Create the input handler
-        inputHandler = new InputHandler(window, screenshotManager, camera);
+        inputHandler = InputHandler.create(window, screenshotManager, camera);
 
         // Create renderer
         renderer = new Renderer(window, scene, screenshotManager);

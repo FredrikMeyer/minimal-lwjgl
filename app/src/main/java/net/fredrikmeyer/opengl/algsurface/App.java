@@ -65,7 +65,7 @@ public class App {
         scene = algSurfaceScene;
 
         // Create the custom input handler that supports toggling auto-rotation with the Z key
-        inputHandler = new AlgSurfaceInputHandler(window, screenshotManager, camera, algSurfaceScene);
+        inputHandler = AlgSurfaceInputHandler.create(window, screenshotManager, camera, algSurfaceScene);
 
         // Create renderer
         renderer = new Renderer(window, scene, screenshotManager);

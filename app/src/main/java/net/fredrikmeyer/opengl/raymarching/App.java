@@ -64,7 +64,7 @@ public class App {
         scene = rayMarchingScene;
 
         // Create the custom input handler that supports toggling auto-rotation with the Z key
-        inputHandler = new RayMarchingInputHandler(window, screenshotManager, camera, rayMarchingScene);
+        inputHandler = RayMarchingInputHandler.create(window, screenshotManager, camera, rayMarchingScene);
 
         // Create renderer
         renderer = new Renderer(window, scene, screenshotManager);

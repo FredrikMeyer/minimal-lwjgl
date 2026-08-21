@@ -41,23 +41,41 @@ public class InputHandler {
     private double scrollSensitivity = 0.1;
 
     /**
-     * Creates a new InputHandler for the specified window.
+     * Creates a new InputHandler for the specified window and registers its input callbacks.
+     *
+     * @param window            the window to handle input for
+     * @param screenshotManager the screenshot manager to use for taking screenshots
+     * @param camera            the camera
+     * @return a fully initialized InputHandler
+     */
+    public static InputHandler create(Window window, ScreenshotManager screenshotManager, Camera camera) {
+        InputHandler handler = new InputHandler(window, screenshotManager, camera);
+        handler.installCallbacks();
+        return handler;
+    }
+
+    /**
+     * Subclasses must be created through their own factory method, which is responsible for
+     * calling {@link #installCallbacks()} once the instance is fully constructed.
      *
      * @param window            the window to handle input for
      * @param screenshotManager the screenshot manager to use for taking screenshots
      * @param camera            the camera
      */
-    public InputHandler(Window window, ScreenshotManager screenshotManager, Camera camera) {
+    protected InputHandler(Window window, ScreenshotManager screenshotManager, Camera camera) {
         this.window = window;
         this.screenshotManager = screenshotManager;
         this.camera = camera;
-        setupCallbacks();
     }
 
     /**
      * Sets up input callbacks for the window.
+     *
+     * <p>This must not be called from a constructor: the callbacks capture {@code this} and may
+     * invoke the overridable {@link #onZKeyPressed()}, which would observe a subclass whose fields
+     * are not yet assigned.
      */
-    private void setupCallbacks() {
+    protected final void installCallbacks() {
         // Set up a key callback
         window.setKeyCallback((windowHandle, key, scancode, action, mods) -> {
             if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {

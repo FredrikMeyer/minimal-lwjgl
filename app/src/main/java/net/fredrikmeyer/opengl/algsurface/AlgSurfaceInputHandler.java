@@ -13,14 +13,20 @@ public class AlgSurfaceInputHandler extends InputHandler {
     private final AlgSurfaceScene algSurfaceScene;
     
     /**
-     * Creates a new AlgSurfaceInputHandler for the specified window.
+     * Creates a new AlgSurfaceInputHandler for the specified window and registers its input callbacks.
      *
      * @param window            the window to handle input for
      * @param screenshotManager the screenshot manager to use for taking screenshots
      * @param camera            the camera
      * @param algSurfaceScene   the algebraic surface scene
      */
-    public AlgSurfaceInputHandler(Window window, ScreenshotManager screenshotManager, Camera camera, AlgSurfaceScene algSurfaceScene) {
+    public static AlgSurfaceInputHandler create(Window window, ScreenshotManager screenshotManager, Camera camera, AlgSurfaceScene algSurfaceScene) {
+        AlgSurfaceInputHandler handler = new AlgSurfaceInputHandler(window, screenshotManager, camera, algSurfaceScene);
+        handler.installCallbacks();
+        return handler;
+    }
+
+    private AlgSurfaceInputHandler(Window window, ScreenshotManager screenshotManager, Camera camera, AlgSurfaceScene algSurfaceScene) {
         super(window, screenshotManager, camera);
         this.algSurfaceScene = algSurfaceScene;
     }
