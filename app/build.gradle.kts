@@ -44,7 +44,10 @@ dependencies {
 
 tasks.withType<JavaCompile>().configureEach {
     // Treat compiler warnings as errors so lint regressions fail the build.
-    options.compilerArgs.addAll(listOf("-Xlint:all", "-Werror"))
+    // `classfile` is excluded: it reports bytecode quirks in third-party jars
+    // (JOML ships version 46.0 class files carrying a 52.0 attribute), which we
+    // cannot fix and which would otherwise break the build on dependency bumps.
+    options.compilerArgs.addAll(listOf("-Xlint:all,-classfile", "-Werror"))
 }
 
 tasks.clean {
