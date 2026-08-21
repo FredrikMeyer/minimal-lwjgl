@@ -1,4 +1,4 @@
-package net.fredrikmeyer.opengl.raymarching;
+package net.fredrikmeyer.opengl.algsurface;
 
 import net.fredrikmeyer.opengl.Camera;
 import net.fredrikmeyer.opengl.IScene;
@@ -13,7 +13,8 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
 
 /**
- * Main application class for the ray marching visualization.
+ * Main application class for the algebraic surface visualization.
+ * The surface is defined by the equation: x³y+xz³+y³z+z³+7z²+5z=0
  */
 public class App {
 
@@ -49,7 +50,7 @@ public class App {
      */
     private void init() {
         // Create the window
-        window = new Window(WindowDimensions.of(600, 600), "Ray Marching Visualization", true);
+        window = new Window(WindowDimensions.of(600, 600), "Algebraic Surface Visualization", true);
         window.init();
 
         // Create the screenshot manager
@@ -60,11 +61,11 @@ public class App {
         camera = new Camera(aspectRatio, new Vector3f(0f, 0f, 5f));
 
         // Create the scene
-        RayMarchingScene rayMarchingScene = new RayMarchingScene(camera);
-        scene = rayMarchingScene;
+        AlgSurfaceScene algSurfaceScene = new AlgSurfaceScene(camera);
+        scene = algSurfaceScene;
 
         // Create the custom input handler that supports toggling auto-rotation with the Z key
-        inputHandler = new RayMarchingInputHandler(window, screenshotManager, camera, rayMarchingScene);
+        inputHandler = new AlgSurfaceInputHandler(window, screenshotManager, camera, algSurfaceScene);
 
         // Create renderer
         renderer = new Renderer(window, scene, screenshotManager);

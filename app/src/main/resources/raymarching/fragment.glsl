@@ -7,6 +7,7 @@ uniform float uTime;
 uniform vec3 uCameraPosition;
 uniform vec3 uCameraOrientation;
 uniform vec3 uLightPosition;
+uniform int uAutoRotate; // 1 for auto-rotate enabled, 0 for disabled
 
 const int MAX_STEPS = 100;
 const float MAX_DIST = 100.0;
@@ -36,20 +37,25 @@ float sdHexPrism(vec3 p, vec2 h) {
 
 // Scene SDF
 float sceneSDF(vec3 p) {
-    // Rotate the scene
-    float angle = uTime * 0.5;
-    float c = cos(angle);
-    float s = sin(angle);
-    vec3 q = vec3(
-        c * p.x + s * p.z,
-        p.y,
-        -s * p.x + c * p.z
-    );
+    // Rotate the scene if auto-rotate is enabled
+    vec3 q;
+    if (uAutoRotate == 1) {
+        float angle = uTime * 0.5;
+        float c = cos(angle);
+        float s = sin(angle);
+        q = vec3(
+            c * p.x + s * p.z,
+            p.y,
+            -s * p.x + c * p.z
+        );
+    } else {
+        q = p; // No rotation
+    }
 
     // Hexagonal prism
     vec2 h = vec2(1.0, 0.5); // Radius and half-height
-    return sdCutHollowSphere(q, 1.0, 0.5, 0.2);
-//    return sdHexPrism(q, h);
+//    return sdCutHollowSphere(q, 1.0, 0.5, 0.2);
+    return sdHexPrism(q, h);
 }
 
 // Calculate normal at a point

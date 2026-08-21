@@ -1,4 +1,4 @@
-package net.fredrikmeyer.opengl.raymarching;
+package net.fredrikmeyer.opengl.algsurface;
 
 import static org.lwjgl.opengl.GL11.GL_FLOAT;
 import static org.lwjgl.opengl.GL11.GL_UNSIGNED_INT;
@@ -19,9 +19,10 @@ import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
 
 /**
- * A scene that renders a 3D hexagonal prism using ray marching with signed distance functions.
+ * A scene that renders a 3D algebraic surface using ray marching.
+ * The surface is defined by the equation: x³y+xz³+y³z+z³+7z²+5z=0
  */
-public class RayMarchingScene implements IScene {
+public class AlgSurfaceScene implements IScene {
 
     private VertexArrayObject vao;
     private VertexBufferObject vbo;
@@ -34,20 +35,20 @@ public class RayMarchingScene implements IScene {
     private int uLightPositionId;
     private int uAutoRotateId;
     private Camera camera;
-    private boolean autoRotate = true;
+    private boolean autoRotate = false;
 
     /**
-     * Constructs a new RayMarchingScene instance, initializing the shader and geometry for the scene.
+     * Constructs a new AlgSurfaceScene instance, initializing the shader and geometry for the scene.
      * 
      * @param camera the camera to use for rendering
      */
-    public RayMarchingScene(Camera camera) {
+    public AlgSurfaceScene(Camera camera) {
         this.camera = camera;
 
         // Load shader
         shader = new Shader(
-            Utils.loadResource("raymarching/vertex.glsl"),
-            Utils.loadResource("raymarching/fragment.glsl"));
+            Utils.loadResource("algsurface/vertex.glsl"),
+            Utils.loadResource("algsurface/fragment.glsl"));
 
         // Create geometry
         createGeometry();
@@ -116,9 +117,9 @@ public class RayMarchingScene implements IScene {
     public void render() {
         shader.activate();
 
-        // Set time uniform for animation
-        float time = (float) GLFW.glfwGetTime();
-        glUniform1f(uTimeId, time);
+        // Time uniform is no longer used for animation
+        // We still set it to 0.0 in case any code references it
+        glUniform1f(uTimeId, 0.0f);
 
         // Set camera position from the Camera object
         Vector3f cameraPosition = camera.getPosition();
@@ -131,9 +132,9 @@ public class RayMarchingScene implements IScene {
         // Set auto-rotate state (1 for enabled, 0 for disabled)
         glUniform1f(uAutoRotateId, autoRotate ? 1.0f : 0.0f);
 
-        // Set light position
-        float lightX = (float) (Math.sin(time) * 3.0);
-        float lightZ = (float) (Math.cos(time) * 3.0);
+        // Set light position (fixed position, not time-dependent)
+        float lightX = 3.0f;
+        float lightZ = 0.0f;
         glUniform3f(uLightPositionId, lightX, 5.0f, lightZ);
 
         vao.bind();

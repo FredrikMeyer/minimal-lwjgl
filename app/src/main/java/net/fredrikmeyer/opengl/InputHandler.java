@@ -18,6 +18,7 @@ import static org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_S;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_UP;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_W;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_Z;
 import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT;
 import static org.lwjgl.glfw.GLFW.GLFW_PRESS;
 import static org.lwjgl.glfw.GLFW.GLFW_RELEASE;
@@ -119,6 +120,12 @@ public class InputHandler {
                 // Look down
                 camera.rotateVertical(-rotationSpeed);
             }
+
+            // Z key for toggling auto-rotation in RayMarchingScene
+            if (key == GLFW_KEY_Z && action == GLFW_RELEASE) {
+                // This will be handled by the RayMarchingApp
+                onZKeyPressed();
+            }
         });
 
         // Set up mouse button callback
@@ -167,5 +174,13 @@ public class InputHandler {
             // Zoom camera based on scroll wheel
             camera.zoom((float) (yoffset * scrollSensitivity));
         });
+    }
+
+    /**
+     * Called when the Z key is pressed. Override this method to add custom behavior.
+     * This is used by the RayMarchingApp to toggle auto-rotation.
+     */
+    protected void onZKeyPressed() {
+        // Default implementation does nothing
     }
 }
