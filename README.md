@@ -10,6 +10,14 @@ To run the tests, use the following command:
 ./gradlew test
 ```
 
+On Windows (PowerShell), use:
+
+```powershell
+.\gradlew.bat test
+```
+
+The build automatically selects LWJGL natives for your operating system and JVM architecture.
+
 ## Links
 
 Colormaps for OpenGL: https://github.com/kbinani/colormap-shaders/tree/master

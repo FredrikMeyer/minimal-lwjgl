@@ -19,7 +19,15 @@ val lwjglNatives = Pair(
                 "natives-linux"
 
         arrayOf("Mac OS X", "Darwin").any { name.startsWith(it) } ->
-            "natives-macos-arm64"
+            "natives-macos${if (arch == "aarch64" || arch == "arm64") "-arm64" else ""}"
+
+        name.startsWith("Windows") ->
+            if (arch == "aarch64" || arch == "arm64")
+                "natives-windows-arm64"
+            else if (arch.contains("64"))
+                "natives-windows"
+            else
+                "natives-windows-x86"
 
         else ->
             throw Error("Unrecognized or unsupported platform. Please set \"lwjglNatives\" manually")
@@ -74,5 +82,9 @@ java {
 application {
     // Define the main class for the application.
     mainClass = "net.fredrikmeyer.opengl.algsurface.App"
-    applicationDefaultJvmArgs = listOf("-XstartOnFirstThread")
+    applicationDefaultJvmArgs =
+        if (arrayOf("Mac OS X", "Darwin").any { System.getProperty("os.name").startsWith(it) })
+            listOf("-XstartOnFirstThread")
+        else
+            emptyList()
 }
